@@ -3,4 +3,4 @@ services:
     name: visual-arc-free
     env: static
     buildCommand: ""
-    staticPublishPath: ./
+    staticPublishPath: ./public
