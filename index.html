@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="description" content="Generate AAMVA-compliant PDF417 barcodes strictly for USA driver's licenses and state IDs.">
+    <title>USA Driver's License PDF417 Generator — VISUAL ARC</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        :root {
+            --bg-grad: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            --panel-bg: rgba(22, 27, 34, 0.9);
+            --panel-border: #30363d;
+            --text-color: #e6edf3;
+            --text-muted: #8b949e;
+            --accent-color: #58a6ff;
+            --input-bg: #0d1117;
+            --input-border: #30363d;
+            --btn-bg: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            --modal-bg: #161b22;
+            --code-bg: #21262d;
+        }
+
+        body.theme-cyber {
+            --bg-grad: linear-gradient(135deg, #0f0c20 0%, #1a103c 100%);
+            --panel-bg: rgba(26, 16, 60, 0.9);
+            --panel-border: #3c2a70;
+            --text-color: #f5f3ff;
+            --text-muted: #a78bfa;
+            --accent-color: #a78bfa;
+            --input-bg: #150f38;
+            --input-border: #3c2a70;
+            --btn-bg: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%);
+            --modal-bg: #1f1442;
+            --code-bg: #2a1b54;
+        }
+
+        body.theme-emerald {
+            --bg-grad: linear-gradient(135deg, #041f17 0%, #062e22 100%);
+            --panel-bg: rgba(6, 46, 34, 0.9);
+            --panel-border: #0f5132;
+            --text-color: #ecfdf5;
+            --text-muted: #6ee7b7;
+            --accent-color: #34d399;
+            --input-bg: #05261a;
+            --input-border: #0f5132;
+            --btn-bg: linear-gradient(135deg, #047857 0%, #10b981 100%);
+            --modal-bg: #093826;
+            --code-bg: #0c422f;
+        }
+
+        body.theme-light {
+            --bg-grad: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --panel-border: #cbd5e1;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb;
+            --input-bg: #f1f5f9;
+            --input-border: #cbd5e1;
+            --btn-bg: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            --modal-bg: #ffffff;
+            --code-bg: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-grad) !important; min-height: 100vh; padding: 20px; color: var(--text-color) !important; transition: background 0.3s, color 0.3s; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* Top Navigation & Payment Status */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .brand-title { color: var(--accent-color); font-size: 1.8rem; font-weight: 700; }
+        .theme-picker { display: flex; gap: 4px; background: var(--input-bg); padding: 3px; border-radius: 20px; border: 1px solid var(--panel-border); }
+        .theme-btn { background: transparent; border: none; color: var(--text-muted); padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .theme-btn:hover { color: var(--text-color); }
+        .theme-btn.active { background: var(--accent-color); color: #ffffff; }
+        .pay-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .pay-badge.locked { background: rgba(210, 153, 34, 0.15); border: 1px solid #d29922; color: #f0883e; }
+        .pay-badge.locked:hover { background: rgba(210, 153, 34, 0.25); transform: translateY(-1px); }
+        .pay-badge.unlocked { background: rgba(63, 185, 80, 0.15); border: 1px solid #3fb950; color: #3fb950; }
+
+        .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 6px; }
+        .header-note { text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-bottom: 18px; }
+        .header-note code { color: var(--accent-color); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+        
+        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+        @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; padding: 20px; color: var(--text-color); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--panel-border); }
+        .panel-title { color: var(--accent-color); font-size: 1rem; font-weight: 600; }
+        .live-badge { font-size: 0.68rem; color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); background: rgba(63, 185, 80, 0.08); padding: 3px 8px; border-radius: 10px; display: none; }
+        
+        .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 560px) { .field-grid { grid-template-columns: repeat(2, 1fr); } }
+        .field { display: flex; flex-direction: column; }
+        .field.full { grid-column: 1 / -1; }
+        .field label { color: var(--text-muted); font-size: 0.7rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input, .field select { background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 10px 12px; color: var(--text-color); font-size: 0.9rem; width: 100%; }
+        .field input:focus, .field select:focus { outline: none; border-color: var(--accent-color); }
+        .field select option { background: var(--input-bg); color: var(--text-color); }
+        .field .hint { color: var(--text-muted); font-size: 0.7rem; margin-top: 4px; }
+        .field .hint.right { color: #3fb950; }
+        
+        .section-header { grid-column: 1 / -1; color: #f0883e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 15px; padding-bottom: 8px; border-bottom: 1px dashed var(--panel-border); }
+        .section-header:first-child { margin-top: 0; }
+        
+        .btn { background: var(--btn-bg); color: #fff; border: none; padding: 14px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4); }
+        .error-msg { display: none; margin-top: 12px; padding: 10px 14px; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; border-radius: 8px; font-size: 0.85rem; }
+        .error-msg.show { display: block; }
+        
+        .dl-hint { color: var(--text-muted); font-size: 0.7rem; margin-top: 4px; }
+        .dl-status { font-size: 0.72rem; margin-top: 3px; }
+        .dl-status.warning { color: #d29922; }
+        .dl-status.valid { color: #3fb950; }
+        .dl-status.invalid { color: #ff7b72; }
+        .dice-btn { margin-top: 6px; background: var(--input-bg); color: var(--text-muted); border: 1px solid var(--panel-border); border-radius: 6px; padding: 5px 10px; font-size: 0.72rem; cursor: pointer; }
+        .dice-btn:hover { color: var(--text-color); border-color: var(--accent-color); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab { background: var(--input-bg); border: 1px solid var(--panel-border); color: var(--text-muted); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; }
+        .tab.active { background: var(--panel-bg); border-color: var(--accent-color); color: var(--accent-color); font-weight: 600; }
+        .tab-view { display: none; }
+        .tab-view.active { display: block; }
+        
+        /* Barcode Canvas & Overlay */
+        .barcode-area { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 340px; position: relative; }
+        .canvas-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; background: #ffffff; border-radius: 10px; padding: 20px; border: 1px solid var(--panel-border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #barcode-canvas { background: transparent; border-radius: 4px; padding: 0; display: none; max-width: 100%; height: auto; }
+        
+        .placeholder { color: var(--text-muted); text-align: center; padding: 60px; }
+        .placeholder svg { width: 60px; height: 60px; opacity: 0.3; margin-bottom: 15px; }
+        
+        .download-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .download-btns button { flex: 1; padding: 10px; background: var(--input-bg); border: 1px solid var(--panel-border); color: var(--accent-color); border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+        .download-btns button:hover { border-color: var(--accent-color); }
+
+        .info-box { padding: 10px 14px; border-radius: 8px; background: rgba(88, 166, 255, 0.07); border: 1px solid var(--panel-border); color: var(--accent-color); font-size: 0.8rem; margin-bottom: 14px; }
+
+        /* Spec strip */
+        .specs { margin-top: 16px; border-top: 1px solid var(--panel-border); padding-top: 14px; }
+        .specs h4 { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .spec-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; border-bottom: 1px dashed var(--panel-border); }
+        .spec-row span:first-child { color: var(--text-muted); }
+        .spec-value { color: var(--text-color); font-family: 'Cascadia Code', Consolas, monospace; }
+
+        /* Raw data view */
+        .raw-controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .raw-controls button { background: var(--input-bg); border: 1px solid var(--panel-border); color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; }
+        .raw-controls button.active { color: var(--accent-color); border-color: var(--accent-color); }
+        .raw-content { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', Consolas, monospace; font-size: 0.76rem; line-height: 1.7; color: var(--text-color); overflow-x: auto; white-space: pre-wrap; word-break: break-all; min-height: 120px; }
+        .raw-content .ctl { color: #f0883e; background: rgba(240, 136, 62, 0.12); border-radius: 3px; padding: 0 2px; }
+        .raw-content .hdr { color: #3fb950; font-weight: 600; }
+        .raw-content .eid { color: var(--accent-color); font-weight: 600; }
+        .raw-empty { color: var(--text-muted); text-align: center; padding: 40px 10px; }
+
+        /* Verification view */
+        .verify-badge { display: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; margin-bottom: 14px; }
+        .verify-badge.ok { display: block; background: rgba(63, 185, 80, 0.1); border: 1px solid rgba(63, 185, 80, 0.4); color: #3fb950; }
+        .verify-badge.bad { display: block; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; }
+        .verify-sub { color: var(--text-muted); font-size: 0.75rem; margin: 4px 0 0; }
+        .verify-section { margin-bottom: 16px; }
+        .verify-section h4 { color: #f0883e; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .vt { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .vt th { text-align: left; color: var(--text-muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--panel-border); font-size: 0.68rem; text-transform: uppercase; }
+        .vt td { padding: 6px 8px; border-bottom: 1px dashed var(--panel-border); vertical-align: top; }
+        .vt td.mono { font-family: 'Cascadia Code', Consolas, monospace; color: var(--accent-color); white-space: nowrap; }
+        .vt td.val { font-family: 'Cascadia Code', Consolas, monospace; word-break: break-all; }
+        .vt td.lbl { color: var(--text-muted); }
+        .warn-list { color: #d29922; font-size: 0.78rem; line-height: 1.6; }
+        .err-list { color: #ff7b72; font-size: 0.78rem; line-height: 1.6; }
+
+        /* Modal Styles */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal { background: var(--modal-bg); border: 1px solid var(--panel-border); border-radius: 14px; width: 100%; max-width: 440px; padding: 24px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.6); color: var(--text-color); }
+        .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: var(--text-color); }
+        .modal-header { text-align: center; margin-bottom: 18px; }
+        .mpesa-logo-badge { display: inline-block; background: #238636; color: #fff; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 4px; letter-spacing: 1px; margin-bottom: 8px; }
+        .modal-header h2 { color: var(--accent-color); font-size: 1.3rem; margin-bottom: 4px; }
+        .modal-header p { color: var(--text-muted); font-size: 0.8rem; }
+        
+        .mock-banner { background: rgba(88, 166, 255, 0.1); border: 1px dashed var(--accent-color); color: var(--accent-color); font-size: 0.78rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; line-height: 1.4; }
+        .price-box { background: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 18px; }
+        .price-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-amount { font-size: 1.8rem; font-weight: 800; color: #3fb950; margin: 2px 0; }
+        .price-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+        .status-box { text-align: center; padding: 15px 0; }
+        .status-spinner { width: 42px; height: 42px; border: 4px solid rgba(63, 185, 80, 0.2); border-top-color: #3fb950; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 14px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-title { font-size: 1rem; font-weight: 600; color: var(--text-color); margin-bottom: 6px; }
+        .status-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+
+        .footer-note { text-align: center; color: var(--text-muted); font-size: 0.72rem; margin-top: 22px; line-height: 1.6; }
+        .reset-access-link { color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.7rem; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navigation with Payment Status -->
+        <div class="top-nav">
+            <div class="brand-title">VISUAL ARC <span style="font-size:0.9rem; color:#3fb950; font-weight:700;">(PERSONAL FREE UNLIMITED)</span> <span style="font-size:0.75rem; background:#238636; color:#ffffff; padding:3px 10px; border-radius:12px; font-weight:600; vertical-align:middle;">v2.5 (Fixed)</span></div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="theme-picker">
+                    <button onclick="setTheme('default')" class="theme-btn active" id="thm-default">🌙 Dark</button>
+                    <button onclick="setTheme('cyber')" class="theme-btn" id="thm-cyber">💜 Violet</button>
+                    <button onclick="setTheme('emerald')" class="theme-btn" id="thm-emerald">🐍 Emerald</button>
+                    <button onclick="setTheme('light')" class="theme-btn" id="thm-light">☀️ Light</button>
+                    <button onclick="openHelpModal()" class="theme-btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700; margin-left:4px;">📖 How to Use</button>
+                </div>
+                <div id="payStatusBadge" class="pay-badge locked" onclick="openPayModal()">
+                    🎁 PERSONAL FREE UNLIMITED MODE (<span class="badge-price">KES 10</span>)
+                </div>
+            </div>
+        </div>
+
+        <div class="subtitle">USA AAMVA-Compliant PDF417 Barcode Generator</div>
+        <div class="header-note">
+            Builds payloads strictly for <strong>USA Driver's Licenses &amp; State IDs</strong> per AAMVA Card Design Standards (Versions <code>02</code>&ndash;<code>10</code>). Country code (<code>DCG</code>) is locked to <code>USA</code>.
+        </div>
+
+        <!-- Payment Confirmation Toast Banner -->
+        <div id="paymentConfirmedBanner" style="display:none; background:rgba(63,185,80,0.15); border:2px solid #3fb950; color:#ffffff; padding:14px; border-radius:10px; margin-bottom:20px; text-align:center;">
+            <div style="font-size:1.15rem; font-weight:800; color:#3fb950; margin-bottom:4px;" id="bannerTitle">
+                🎉 Payment Confirmed &amp; Credits Added!
+            </div>
+            <div style="font-size:0.9rem; color:var(--text-color);" id="bannerSub">
+                Fill in customer details below and click <strong>"⚡ Generate Barcode"</strong> to create your unlocked PDF417 barcode.
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- ==================== INPUT ==================== -->
+            <div class="panel">
+                <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span class="panel-title">📝 License Data</span>
+                        <span class="live-badge" id="liveBadge">● LIVE</span>
+                    </div>
+                    <button type="button" onclick="generateRandomSampleData()" class="dice-btn" style="font-size:0.78rem; background:rgba(63,185,80,0.15); border:1px solid #3fb950; color:#3fb950; padding:4px 10px; border-radius:12px; font-weight:600; cursor:pointer;">🎲 Randomize Sample Data</button>
+                </div>
+                <div class="field-grid">
+
+                    <div class="section-header">AAMVA Header &amp; Issuing Authority</div>
+                    <div class="field"><label>Country of Issue (DCG)</label>
+                        <input type="text" id="country" value="USA" readonly style="background:#161b22; color:#3fb950; font-weight:700;">
+                        <div class="hint">Locked to USA</div>
+                    </div>
+                    <div class="field"><label>AAMVA Version</label>
+                        <select id="aamvaVersion">
+                            <option value="02">02 — 2003</option>
+                            <option value="03">03 — 2005</option>
+                            <option value="04">04 — 2009</option>
+                            <option value="05">05 — 2010</option>
+                            <option value="06">06 — 2011</option>
+                            <option value="07">07 — 2012</option>
+                            <option value="08">08 — 2013</option>
+                            <option value="09">09 — 2016</option>
+                            <option value="10" selected>10 — 2020 (current)</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Jurisdiction Version</label>
+                        <input type="text" id="jurisdictionVersion" value="01" maxlength="2" placeholder="01">
+                    </div>
+                    <div class="field"><label>Document Type</label>
+                        <select id="docType">
+                            <option value="DL">Driver License</option>
+                            <option value="ID">ID Card</option>
+                        </select>
+                    </div>
+                    <div class="field full"><label>Issuer ID (IIN / Authority)</label>
+                        <select id="iin" onchange="onIINChange()">
+                            <option value="636033">636033 — Alabama (AL)</option>
+                            <option value="636059">636059 — Alaska (AK)</option>
+                            <option value="636026">636026 — Arizona (AZ)</option>
+                            <option value="636021">636021 — Arkansas (AR)</option>
+                            <option value="636014">636014 — California (CA)</option>
+                            <option value="636020">636020 — Colorado (CO)</option>
+                            <option value="636006">636006 — Connecticut (CT)</option>
+                            <option value="636011">636011 — Delaware (DE)</option>
+                            <option value="636043">636043 — District of Columbia (DC)</option>
+                            <option value="636010">636010 — Florida (FL)</option>
+                            <option value="636055">636055 — Georgia (GA)</option>
+                            <option value="636047">636047 — Hawaii (HI)</option>
+                            <option value="636050">636050 — Idaho (ID)</option>
+                            <option value="636035">636035 — Illinois (IL)</option>
+                            <option value="636037">636037 — Indiana (IN)</option>
+                            <option value="636018">636018 — Iowa (IA)</option>
+                            <option value="636022">636022 — Kansas (KS)</option>
+                            <option value="636046">636046 — Kentucky (KY)</option>
+                            <option value="636007">636007 — Louisiana (LA)</option>
+                            <option value="636041">636041 — Maine (ME)</option>
+                            <option value="636003">636003 — Maryland (MD)</option>
+                            <option value="636002">636002 — Massachusetts (MA)</option>
+                            <option value="636032">636032 — Michigan (MI)</option>
+                            <option value="636038">636038 — Minnesota (MN)</option>
+                            <option value="636051">636051 — Mississippi (MS)</option>
+                            <option value="636030">636030 — Missouri (MO)</option>
+                            <option value="636008">636008 — Montana (MT)</option>
+                            <option value="636054">636054 — Nebraska (NE)</option>
+                            <option value="636049">636049 — Nevada (NV)</option>
+                            <option value="636039">636039 — New Hampshire (NH)</option>
+                            <option value="636036">636036 — New Jersey (NJ)</option>
+                            <option value="636009">636009 — New Mexico (NM)</option>
+                            <option value="636001">636001 — New York (NY)</option>
+                            <option value="636004">636004 — North Carolina (NC)</option>
+                            <option value="636034">636034 — North Dakota (ND)</option>
+                            <option value="636023">636023 — Ohio (OH)</option>
+                            <option value="636058">636058 — Oklahoma (OK)</option>
+                            <option value="636029">636029 — Oregon (OR)</option>
+                            <option value="636025">636025 — Pennsylvania (PA)</option>
+                            <option value="636052">636052 — Rhode Island (RI)</option>
+                            <option value="636005">636005 — South Carolina (SC)</option>
+                            <option value="636042">636042 — South Dakota (SD)</option>
+                            <option value="636053">636053 — Tennessee (TN)</option>
+                            <option value="636015">636015 — Texas (TX)</option>
+                            <option value="636040">636040 — Utah (UT)</option>
+                            <option value="636024">636024 — Vermont (VT)</option>
+                            <option value="636000">636000 — Virginia (VA)</option>
+                            <option value="636045">636045 — Washington (WA)</option>
+                            <option value="636061">636061 — West Virginia (WV)</option>
+                            <option value="636031">636031 — Wisconsin (WI)</option>
+                            <option value="636060">636060 — Wyoming (WY)</option>
+                            <option value="604431">604431 — Puerto Rico (PR)</option>
+                            <option value="636019">636019 — Guam (GU)</option>
+                            <option value="636062">636062 — Virgin Islands (VI)</option>
+                            <option value="604430">604430 — Northern Mariana Islands (MP)</option>
+                            <option value="604427">604427 — American Samoa (AS)</option>
+                        </select>
+                        <div class="hint">Auto-syncs bidirectionally with State</div>
+                    </div>
+
+                    <div class="section-header">Name</div>
+                    <div class="field"><label>Last Name</label><input type="text" id="lastName" placeholder="DOE" maxlength="45"></div>
+                    <div class="field"><label>First Name</label><input type="text" id="firstName" placeholder="JANE" maxlength="45"></div>
+                    <div class="field"><label>Middle Name</label><input type="text" id="middleName" placeholder="QUINN" maxlength="45"></div>
+                    <div class="field"><label>Suffix</label>
+                        <select id="suffix">
+                            <option value="">None</option>
+                            <option value="JR">JR</option>
+                            <option value="SR">SR</option>
+                            <option value="1ST">1ST</option>
+                            <option value="2ND">2ND</option>
+                            <option value="3RD">3RD</option>
+                            <option value="4TH">4TH</option>
+                        </select>
+                    </div>
+
+                    <div class="section-header">Dates &amp; Demographics</div>
+                    <div class="field"><label>Date of Birth</label><input type="date" id="dob"></div>
+                    <div class="field"><label>Sex</label>
+                        <select id="sex">
+                            <option value="1">Male (1)</option>
+                            <option value="2" selected>Female (2)</option>
+                            <option value="9">Unspecified (9)</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Height (inches)</label>
+                        <input type="number" id="height" placeholder="64" min="36" max="96" value="64">
+                        <div class="hint" id="heightHint">5 ft 4 in</div>
+                    </div>
+                    <div class="field"><label>Weight (lbs, optional)</label><input type="number" id="weight" placeholder="130" min="50" max="500"></div>
+                    <div class="field"><label>Eye Color</label>
+                        <select id="eyeColor">
+                            <option value="BLK">Black</option>
+                            <option value="BLU">Blue</option>
+                            <option value="BRO" selected>Brown</option>
+                            <option value="GRY">Gray</option>
+                            <option value="GRN">Green</option>
+                            <option value="HAZ">Hazel</option>
+                            <option value="MAR">Maroon</option>
+                            <option value="PNK">Pink</option>
+                            <option value="DIC">Dichromatic</option>
+                            <option value="UNK">Unknown</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Hair Color (optional)</label>
+                        <select id="hairColor">
+                            <option value="">—</option>
+                            <option value="BAL">Bald</option>
+                            <option value="BLK">Black</option>
+                            <option value="BLN">Blond</option>
+                            <option value="BRO">Brown</option>
+                            <option value="GRY">Gray</option>
+                            <option value="RED">Red / Auburn</option>
+                            <option value="SDY">Sandy</option>
+                            <option value="WHI">White</option>
+                            <option value="UNK">Unknown</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Issue Date</label><input type="date" id="issueDate"></div>
+                    <div class="field"><label>Expiration Date</label><input type="date" id="expirationDate"></div>
+
+                    <div class="section-header">Address</div>
+                    <div class="field full"><label>Street Address</label><input type="text" id="address1" placeholder="123 MAIN ST" maxlength="36"></div>
+                    <div class="field full"><label>Street Address 2 (optional)</label><input type="text" id="address2" placeholder="APT 4B" maxlength="36"></div>
+                    <div class="field"><label>City</label><input type="text" id="city" placeholder="MONTGOMERY" maxlength="20"></div>
+                    <div class="field"><label>State Jurisdiction (DAJ)</label>
+                        <!-- Quick State Pill Buttons -->
+                        <div style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:6px;">
+                            <button type="button" onclick="loadStatePreset('CA')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌴 CA</button>
+                            <button type="button" onclick="loadStatePreset('NY')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🗽 NY</button>
+                            <button type="button" onclick="loadStatePreset('TX')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🤠 TX</button>
+                            <button type="button" onclick="loadStatePreset('FL')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">☀️ FL</button>
+                            <button type="button" onclick="loadStatePreset('WA')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌲 WA</button>
+                            <button type="button" onclick="loadStatePreset('IL')" class="dice-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); font-size:0.72rem; padding:3px 6px; border-radius:4px; cursor:pointer;">🌾 IL</button>
+                        </div>
+                        <select id="state" onchange="onStateChange()">
+                            <option value="AL">Alabama</option>
+                            <option value="AK">Alaska</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="AR">Arkansas</option>
+                            <option value="CA">California</option>
+                            <option value="CO">Colorado</option>
+                            <option value="CT">Connecticut</option>
+                            <option value="DE">Delaware</option>
+                            <option value="DC">District of Columbia</option>
+                            <option value="FL">Florida</option>
+                            <option value="GA">Georgia</option>
+                            <option value="HI">Hawaii</option>
+                            <option value="ID">Idaho</option>
+                            <option value="IL">Illinois</option>
+                            <option value="IN">Indiana</option>
+                            <option value="IA">Iowa</option>
+                            <option value="KS">Kansas</option>
+                            <option value="KY">Kentucky</option>
+                            <option value="LA">Louisiana</option>
+                            <option value="ME">Maine</option>
+                            <option value="MD">Maryland</option>
+                            <option value="MA">Massachusetts</option>
+                            <option value="MI">Michigan</option>
+                            <option value="MN">Minnesota</option>
+                            <option value="MS">Mississippi</option>
+                            <option value="MO">Missouri</option>
+                            <option value="MT">Montana</option>
+                            <option value="NE">Nebraska</option>
+                            <option value="NV">Nevada</option>
+                            <option value="NH">New Hampshire</option>
+                            <option value="NJ">New Jersey</option>
+                            <option value="NM">New Mexico</option>
+                            <option value="NY">New York</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="ND">North Dakota</option>
+                            <option value="OH">Ohio</option>
+                            <option value="OK">Oklahoma</option>
+                            <option value="OR">Oregon</option>
+                            <option value="PA">Pennsylvania</option>
+                            <option value="RI">Rhode Island</option>
+                            <option value="SC">South Carolina</option>
+                            <option value="SD">South Dakota</option>
+                            <option value="TN">Tennessee</option>
+                            <option value="TX">Texas</option>
+                            <option value="UT">Utah</option>
+                            <option value="VT">Vermont</option>
+                            <option value="VA">Virginia</option>
+                            <option value="WA" selected>Washington</option>
+                            <option value="WV">West Virginia</option>
+                            <option value="WI">Wisconsin</option>
+                            <option value="WY">Wyoming</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>ZIP Code</label><input type="text" id="zip" placeholder="36101 or 361011234" maxlength="10"><div class="hint">5 or 9 digits</div></div>
+
+                    <div class="section-header">License Details</div>
+                    <div class="field full"><label>License Number *</label>
+                        <input type="text" id="licenseNumber" placeholder="Enter DL number" maxlength="25" oninput="validateDL()">
+                        <div id="dlHint" class="dl-hint">Example: 1234567</div>
+                        <div id="dlStatus" class="dl-status warning">⚠️ Enter valid AL DL number</div>
+                    </div>
+                    <div class="field"><label>Vehicle Class</label><input type="text" id="vehicleClass" placeholder="D" maxlength="6"></div>
+                    <div class="field"><label>Restrictions</label><input type="text" id="restrictions" placeholder="B" maxlength="12"></div>
+                    <div class="field"><label>Endorsements</label><input type="text" id="endorsements" placeholder="N" maxlength="5"></div>
+                    <div class="field full"><label>Document Discriminator (DCF)</label>
+                        <input type="text" id="dd" maxlength="25">
+                        <button type="button" class="dice-btn" id="ddRegen" onclick="regenDD()">🎲 Generate new</button>
+                    </div>
+
+                    <div class="section-header">Barcode Layout &amp; Shape</div>
+                    <div class="field"><label>Barcode Columns</label>
+                        <select id="barcodeColumns">
+                            <option value="4">4 — Tall / Square</option>
+                            <option value="6" selected>6 — Standard AAMVA ID (Recommended)</option>
+                            <option value="8">8 — Medium Rectangular</option>
+                            <option value="10">10 — Wide</option>
+                            <option value="12">12 — Extra Wide</option>
+                            <option value="16">16 — Thin Strip</option>
+                        </select>
+                        <div class="hint">6 columns matches physical US driver's licenses</div>
+                    </div>
+                    <div class="field"><label>Row Height</label>
+                        <select id="barcodeRowHeight">
+                            <option value="3">3 — Compact</option>
+                            <option value="4" selected>4 — Standard ID</option>
+                            <option value="5">5 — Tall</option>
+                            <option value="6">6 — High</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Background</label>
+                        <select id="barcodeBg">
+                            <option value="transparent" selected>Transparent (No White Background)</option>
+                            <option value="FFFFFF">White Background</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Export Quality</label>
+                        <select id="exportScale">
+                            <option value="3">3x Standard Resolution</option>
+                            <option value="4">4x High Definition</option>
+                            <option value="6" selected>6x Ultra High-Res Print (Recommended)</option>
+                            <option value="8">8x Maximum Quality</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" id="generateBtn" onclick="generateBarcode()">Generate PDF417 Barcode</button>
+                <div id="errorMsg" class="error-msg"></div>
+            </div>
+
+            <!-- ==================== OUTPUT ==================== -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">📊 Barcode Output</span>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" data-tab="tab-barcode" onclick="switchTab('tab-barcode', this)">Barcode</button>
+                    <button class="tab" data-tab="tab-raw" onclick="switchTab('tab-raw', this)">Raw Data</button>
+                    <button class="tab" data-tab="tab-verify" onclick="switchTab('tab-verify', this)">Verification</button>
+                </div>
+
+                <div class="tab-view active" id="tab-barcode">
+                    <div class="info-box" id="specNote">Version <strong>10</strong> (2020) payload — single <strong>DL</strong> subfile.</div>
+                    
+                    <div class="barcode-area">
+                        <div id="placeholder" class="placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h4M7 12h10M7 16h6"/></svg>
+                            <p>Click <strong>Generate</strong><br>to create barcode</p>
+                        </div>
+                        
+                        <div class="canvas-container">
+                            <canvas id="barcode-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="downloadBtns" class="download-btns" style="display:none; gap:10px; margin-top:15px; flex-wrap:wrap;">
+                        <button id="btnPng" onclick="downloadPNG()">📥 PNG (hi-res)</button>
+                        <button id="btnSvg" onclick="downloadSVG()">📥 SVG (vector)</button>
+                        <button id="btnOpenImg" onclick="openCanvasImage()" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-weight:700;">🖼️ Save / Open Image</button>
+                    </div>
+
+                    <div class="specs">
+                        <h4>AAMVA Header</h4>
+                        <div class="spec-row"><span>AAMVA Version</span><span class="spec-value" id="spec-version">10 (2020)</span></div>
+                        <div class="spec-row"><span>IIN</span><span class="spec-value" id="spec-iin">636001</span></div>
+                        <div class="spec-row"><span>Subfile / Entries</span><span class="spec-value" id="spec-entries">DL / 1</span></div>
+                        <div class="spec-row"><span>Data Elements</span><span class="spec-value" id="spec-elements">0</span></div>
+                        <div class="spec-row"><span>Total Length</span><span class="spec-value" id="spec-length">0 chars</span></div>
+                    </div>
+                </div>
+
+                <div class="tab-view" id="tab-raw">
+                    <div class="info-box">Separators: <span style="font-family:monospace">␊</span> = LF (element) &nbsp; <span style="font-family:monospace">␍</span> = CR (subfile end) &nbsp; <span style="font-family:monospace">␞</span> = RS (header)</div>
+                    <div class="raw-controls">
+                        <button class="active" id="btnPretty" onclick="setRawMode('pretty')">Pretty</button>
+                        <button id="btnEscaped" onclick="setRawMode('escaped')">Escaped (\n \r)</button>
+                        <button onclick="copyRaw(event)">📋 Copy raw</button>
+                    </div>
+                    <div id="rawContent" class="raw-content"><div class="raw-empty">Generate a barcode to see the raw AAMVA payload.</div></div>
+                </div>
+
+                <div class="tab-view" id="tab-verify">
+                    <div class="verify-badge" id="verifyBadge"></div>
+                    <p class="verify-sub" id="verifySub">The generated payload is parsed back with an independent decoder to prove scanners can read it.</p>
+                    <div class="verify-section" id="verifyHeaderSection" style="display:none;">
+                        <h4>Decoded Header</h4>
+                        <table class="vt"><tbody id="verifyHeaderBody"></tbody></table>
+                    </div>
+                    <div class="verify-section" id="verifyElementsSection" style="display:none;">
+                        <h4>Decoded Elements (<span id="verifyElCount">0</span>)</h4>
+                        <table class="vt">
+                            <thead><tr><th>ID</th><th>Field</th><th>Value</th></tr></thead>
+                            <tbody id="verifyElementsBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="verify-section" id="verifyWarnSection" style="display:none;">
+                        <h4>Warnings</h4>
+                        <div class="warn-list" id="verifyWarnList"></div>
+                    </div>
+                    <div class="verify-section" id="verifyErrSection" style="display:none;">
+                        <h4>Errors</h4>
+                        <div class="err-list" id="verifyErrList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            Payloads follow the AAMVA DL/ID Card Design Standard (header structure, subfile designator table, element IDs, MMDDYYYY dates).<br>
+            For barcode scanner / parser testing and standards education — encode only data you are authorized to use.
+            <span id="resetAccessBtn" class="reset-access-link" style="display:none;" onclick="resetPaymentAccess()">Reset Lock (Dev)</span>
+        </div>
+    </div>
+
+    <!-- ==================== FREE TOOL EXPORT DOWNLOAD MODAL ==================== -->
+    <div id="downloadModal" class="modal-backdrop" style="display:none;">
+        <div class="modal" style="max-width:520px; text-align:center;">
+            <button class="modal-close" onclick="closeDownloadModal()">&times;</button>
+            <div style="font-size:2.5rem; margin-bottom:8px;" id="dlModalIcon">📥</div>
+            <h3 style="font-size:1.25rem; color:var(--text-color); margin-bottom:6px; font-weight:800;" id="dlModalTitle">Download Barcode Export</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:16px;" id="dlModalSub">Your high-resolution PDF417 barcode is ready below:</p>
+
+            <div style="background:#ffffff; border-radius:10px; padding:18px; margin-bottom:16px; border:2px solid #3fb950; display:inline-block; max-width:100%; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <img id="dlModalImg" style="max-width:100%; height:auto; display:block; margin:0 auto;" alt="PDF417 Barcode">
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
+                <a id="dlModalActionBtn" download="VISUAL ARC.png" href="#" target="_blank" class="btn" style="background:#238636; text-decoration:none; font-size:1rem; font-weight:700; padding:12px; display:block; margin-top:0;">
+                    📥 Click Here to Download Image
+                </a>
+                <button onclick="openImageNewTab()" class="btn" style="background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-size:0.88rem; font-weight:700; padding:10px; margin-top:0;">
+                    🖼️ Open High-Res Image in New Window
+                </button>
+            </div>
+
+            <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">
+                💡 <em>Note: If automatic download is blocked by your browser, right-click (or tap &amp; hold) the barcode image above and select <strong>"Save Image As..."</strong></em>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== HOW TO USE HELP MODAL ==================== -->
+    <div id="helpModal" class="modal-backdrop" style="display:none;">
+        <div class="modal" style="max-width:580px;">
+            <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            <div class="modal-header" style="text-align:left; border-bottom:1px solid var(--panel-border); padding-bottom:12px; margin-bottom:16px;">
+                <div class="mpesa-logo-badge" style="background:rgba(88,166,255,0.15); color:#58a6ff; border-color:#58a6ff;">USER GUIDE &amp; INSTRUCTIONS</div>
+                <h2 style="font-size:1.3rem; margin-top:6px;">📖 How to Use VISUAL ARC Generator</h2>
+                <p>Follow these 4 simple steps to purchase credits, generate, and download AAMVA-compliant US Driver's License PDF417 barcodes.</p>
+            </div>
+            
+            <div class="modal-body" style="font-size:0.9rem; line-height:1.6; color:var(--text-color);">
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">1</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Purchase Barcode Generation Credits</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"🔒 BUY CREDITS"</strong> or the top status badge. Select your bundle (1 Credit, 3 Credits, or 5 Credits Bundle), enter your M-Pesa phone number, and enter your PIN on your mobile phone to complete payment.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">2</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Select State &amp; Fill Customer Data</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Select the US State (e.g. Washington <code>WA</code>, California <code>CA</code>, New York <code>NY</code>). The official AAMVA ISO Issuer ID (IIN) auto-syncs automatically. Enter the Driver's License Number, Last Name, First Name, Date of Birth, Expiration Date, and Address. <em>(Middle Name is optional!)</em></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">3</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Generate PDF417 Barcode</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>"⚡ Generate PDF417 Barcode"</strong> or press Enter. The system validates the license format and renders a clean, high-resolution AAMVA PDF417 2D barcode canvas. 1 credit is used per generated barcode.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px; align-items:flex-start;">
+                    <div style="background:var(--accent-color); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">4</div>
+                    <div>
+                        <strong style="color:var(--text-color); font-size:0.98rem;">Download PNG / SVG &amp; Inspect Data</strong>
+                        <div style="color:var(--text-muted); margin-top:2px;">Click <strong>📥 PNG (hi-res)</strong> or <strong>📥 SVG (vector)</strong> to download print-ready barcode images, inspect raw bytes in the Raw Payload tab, or verify compliance in the Inspector panel.</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:center;">
+                    <button class="btn mpesa-btn" onclick="closeHelpModal()" style="width:100%; max-width:240px; margin:0 auto; padding:10px;">Got It, Let's Start! 🚀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== M-PESA PAYMENT MODAL ==================== -->
+    <div id="payModal" class="modal-backdrop" style="display:none;">
+        <div class="modal">
+            <button class="modal-close" onclick="closePayModal()">&times;</button>
+            <div class="modal-header">
+                <div class="mpesa-logo-badge">PAYSTACK M-PESA ONLINE</div>
+                <h2>Buy Barcode Generation Credits</h2>
+                <p>Select a credit bundle below to generate &amp; download high-res PDF417 barcodes</p>
+            </div>
+            
+            <div class="modal-body">
+                <div id="mockBanner" class="mock-banner" style="display:none;">
+                    🧪 <strong>TEST MODE ACTIVE:</strong> No real M-Pesa funds will be deducted. Enter any phone number to test.
+                </div>
+
+                <div class="price-box" style="padding:12px; margin-bottom:15px;">
+                    <div style="font-size:0.85rem; font-weight:700; color:var(--text-color); margin-bottom:10px;">Select Barcode Pass Package:</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="bundle-card" id="bundleCard1" onclick="selectPaymentBundle(100, 1)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:2px solid var(--accent-color); background:rgba(46,160,67,0.1); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 1 Barcode Pass</strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 1 Barcode Generation</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 100</div>
+                        </div>
+                        
+                        <div class="bundle-card" id="bundleCard3" onclick="selectPaymentBundle(250, 3)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 3 Barcodes Bundle <span style="font-size:0.72rem; background:#238636; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">SAVE KES 50</span></strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 3 Barcode Generations</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 250</div>
+                        </div>
+
+                        <div class="bundle-card" id="bundleCard5" onclick="selectPaymentBundle(400, 5)" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.04); cursor:pointer;">
+                            <div>
+                                <strong style="font-size:0.95rem; display:block;">🎟️ 5 Barcodes Bundle <span style="font-size:0.72rem; background:#d29922; color:#fff; padding:2px 6px; border-radius:8px; margin-left:4px;">BEST VALUE (SAVE KES 100)</span></strong>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">Unlocks 5 Barcode Generations</span>
+                            </div>
+                            <div style="font-size:1.15rem; font-weight:800; color:#3fb950;">KES 400</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentForm">
+                    <!-- Method B: Paystack STK Push (Default & Only Payment Method) -->
+                    <div id="payModeStk">
+                        <div class="field" style="margin-bottom:15px;">
+                            <label>M-Pesa Phone Number</label>
+                            <input type="tel" id="payPhone" placeholder="0712345678 or 254712345678" maxlength="15">
+                            <div class="hint" id="phoneHint">Kenyan M-Pesa mobile line (07XX XXX XXX / 01XX XXX XXX)</div>
+                        </div>
+                        <button id="paySubmitBtn" class="btn mpesa-btn" onclick="initiateMpesaPayment()">
+                            📲 Pay <span class="btnPriceLabel">KES 100</span> via M-Pesa STK Push
+                        </button>
+                    </div>
+                </div>
+
+                <div id="paymentStatus" class="status-box" style="display:none;">
+                    <div class="status-spinner"></div>
+                    <div class="status-title" id="statusTitle">Sending STK Push...</div>
+                    <div class="status-desc" id="statusDesc">Please check your mobile phone for the M-Pesa prompt and enter your PIN.</div>
+
+                    <div id="mockTestActions" style="display:none; margin-top:12px;">
+                        <button class="dice-btn" onclick="forceMockPayment('COMPLETED')">⚡ [Test Mode] Simulate PIN Entry Success</button>
+                        <button class="dice-btn" onclick="forceMockPayment('CANCELLED')" style="color:#ff7b72; margin-left:6px;">❌ Simulate Cancel</button>
+                    </div>
+                </div>
+
+                <div id="payIframeContainer" style="display:none; width:100%; height:460px; border-radius:10px; overflow:hidden; margin-top:10px; border:1px solid var(--panel-border);">
+                    <iframe id="paystackIframe" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
+                </div>
+
+                <!-- Post-Payment Instant Download Success Screen -->
+                <div id="paymentSuccess" style="display:none; text-align:center; padding:10px 0;">
+                    <div style="font-size:3rem; margin-bottom:6px;">🎉</div>
+                    <h3 style="color:#3fb950; font-size:1.3rem; margin-bottom:4px; font-weight:800;">Payment Successful &amp; Barcode Unlocked!</h3>
+                    <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:15px;" id="successReceiptMsg">Your payment has been verified. Download your barcode below:</p>
+
+                    <!-- Unlocked Barcode Preview Image -->
+                    <div style="background:#ffffff; border-radius:8px; padding:15px; margin-bottom:16px; border:2px solid #3fb950; display:inline-block; max-width:100%; overflow:hidden; box-shadow: 0 0 20px rgba(63,185,80,0.3);">
+                        <img id="modalBarcodePreview" style="max-width:100%; height:auto; display:block; margin:0 auto;" alt="Unlocked PDF417 Barcode">
+                    </div>
+
+                    <!-- Instant Download & Copy Buttons -->
+                    <div style="display:flex; flex-direction:column; gap:10px; max-width:340px; margin:0 auto 15px auto;">
+                        <button class="btn mpesa-btn" onclick="downloadPNG(); closePayModal();" style="background:#238636; font-size:1rem; font-weight:700; padding:12px; cursor:pointer;">
+                            📥 Download High-Res PNG Barcode
+                        </button>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn" onclick="downloadSVG(); closePayModal();" style="flex:1; background:rgba(255,255,255,0.08); border:1px solid var(--panel-border); font-size:0.85rem; cursor:pointer;">
+                                📥 Download SVG
+                            </button>
+                            <button class="btn" onclick="copyRawPayloadModal()" style="flex:1; background:rgba(88,166,255,0.15); border:1px solid #58a6ff; color:#58a6ff; font-size:0.85rem; cursor:pointer;">
+                                📋 Copy Raw Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="dice-btn" onclick="closePayModal(); scrollToBarcode();" style="color:var(--text-muted); font-size:0.82rem; text-decoration:underline; cursor:pointer;">
+                        🔍 View Full Page Preview &amp; Inspector
+                    </button>
+                </div>
+
+                <div id="paymentError" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bwip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.4.4/dist/bwip-js-min.js"></script>
+    <script src="js/aamva.js"></script>
+    <script>
+        // ================= State DL number formats =================
+        const dlFormats = {
+            'AL': { pattern: /^[0-9]{1,8}$/, example: '1234567' },
+            'AK': { pattern: /^[0-9]{1,7}$/, example: '1234567' },
+            'AZ': { pattern: /^[A-Z0-9]{8,9}$/, example: 'A12345678' },
+            'AR': { pattern: /^[0-9]{4,9}$/, example: '123456789' },
+            'CA': { pattern: /^[A-Z][0-9]{7}$/, example: 'A1234567' },
+            'CO': { pattern: /^[A-Z0-9]{9}$/, example: '123456789' },
+            'CT': { pattern: /^[0-9]{9}$/, example: '123456789' },
+            'DE': { pattern: /^[0-9]{1,7}$/, example: '1234567' },
+            'DC': { pattern: /^[0-9]{7,9}$/, example: '1234567' },
+            'FL': { pattern: /^[A-Z][0-9]{12}$/, example: 'A123456789012' },
+            'GA': { pattern: /^[0-9]{7,9}$/, example: '123456789' },
+            'HI': { pattern: /^[A-Z0-9][0-9]{8}$/, example: 'H12345678' },
+            'ID': { pattern: /^[A-Z0-9]{9}$/, example: '123456789' },
+            'IL': { pattern: /^[A-Z][0-9]{11,12}$/, example: 'A12345678901' },
+            'IN': { pattern: /^[A-Z0-9]{9,10}$/, example: '123456789' },
+            'IA': { pattern: /^[A-Z0-9]{9}$/, example: '123456789' },
+            'KS': { pattern: /^[A-Z0-9]{9}$/, example: 'K12345678' },
+            'KY': { pattern: /^[A-Z0-9]{8,9}$/, example: 'K12345678' },
+            'LA': { pattern: /^[0-9]{1,9}$/, example: '123456789' },
+            'ME': { pattern: /^[0-9]{7,8}[X]?$/, example: '1234567' },
+            'MD': { pattern: /^[A-Z0-9]{13}$/, example: 'M123456789012' },
+            'MA': { pattern: /^[A-Z0-9]{8,9}$/, example: 'S12345678' },
+            'MI': { pattern: /^[A-Z][0-9]{12}$/, example: 'M123456789012' },
+            'MN': { pattern: /^[A-Z][0-9]{12}$/, example: 'M123456789012' },
+            'MS': { pattern: /^[0-9]{9}$/, example: '123456789' },
+            'MO': { pattern: /^[A-Z0-9]{5,10}$/, example: 'A123456' },
+            'MT': { pattern: /^[A-Z0-9]{9,14}$/, example: '1234567890123' },
+            'NE': { pattern: /^[A-Z][0-9]{6,8}$/, example: 'A123456' },
+            'NV': { pattern: /^[0-9]{9,12}$/, example: '123456789' },
+            'NH': { pattern: /^[A-Z0-9]{10,11}$/, example: '12ABC34567' },
+            'NJ': { pattern: /^[A-Z][0-9]{14}$/, example: 'N12345678901234' },
+            'NM': { pattern: /^[0-9]{9}$/, example: '123456789' },
+            'NY': { pattern: /^[A-Z0-9]{8,16}$/, example: '123456789' },
+            'NC': { pattern: /^[0-9]{1,12}$/, example: '123456789012' },
+            'ND': { pattern: /^[A-Z0-9]{9}$/, example: 'ABC123456' },
+            'OH': { pattern: /^[A-Z0-9]{8}$/, example: 'AB123456' },
+            'OK': { pattern: /^[A-Z0-9]{9}$/, example: 'A12345678' },
+            'OR': { pattern: /^[A-Z0-9]{1,9}$/, example: '123456789' },
+            'PA': { pattern: /^[0-9]{8}$/, example: '12345678' },
+            'RI': { pattern: /^[A-Z0-9]{7,8}$/, example: '1234567' },
+            'SC': { pattern: /^[0-9]{5,11}$/, example: '123456789' },
+            'SD': { pattern: /^[0-9]{6,10}$/, example: '1234567890' },
+            'TN': { pattern: /^[0-9]{7,9}$/, example: '123456789' },
+            'TX': { pattern: /^[0-9]{8}$/, example: '12345678' },
+            'UT': { pattern: /^[0-9]{4,10}$/, example: '1234567890' },
+            'VT': { pattern: /^[A-Z0-9]{8}$/, example: '12345678' },
+            'VA': { pattern: /^[A-Z0-9]{9,12}$/, example: 'A12345678' },
+            'WA': { pattern: /^[A-Z0-9*]{12}$/, example: 'WDL9SGD352OB' },
+            'WV': { pattern: /^[A-Z0-9]{7}$/, example: '1234567' },
+            'WI': { pattern: /^[A-Z][0-9]{13}$/, example: 'W1234567890123' },
+            'WY': { pattern: /^[0-9]{9,10}$/, example: '123456789' }
+        };
+
+        const stateToIIN = {
+            'AL': '636033', 'AK': '636059', 'AZ': '636026', 'AR': '636021', 'CA': '636014',
+            'CO': '636020', 'CT': '636006', 'DE': '636011', 'DC': '636043', 'FL': '636010',
+            'GA': '636055', 'HI': '636047', 'ID': '636050', 'IL': '636035', 'IN': '636037',
+            'IA': '636018', 'KS': '636022', 'KY': '636046', 'LA': '636007', 'ME': '636041',
+            'MD': '636003', 'MA': '636002', 'MI': '636032', 'MN': '636038', 'MS': '636051',
+            'MO': '636030', 'MT': '636008', 'NE': '636054', 'NV': '636049', 'NH': '636039',
+            'NJ': '636036', 'NM': '636009', 'NY': '636001', 'NC': '636004', 'ND': '636034',
+            'OH': '636023', 'OK': '636058', 'OR': '636029', 'PA': '636025', 'RI': '636052',
+            'SC': '636005', 'SD': '636042', 'TN': '636053', 'TX': '636015', 'UT': '636040',
+            'VT': '636024', 'VA': '636000', 'WA': '636045', 'WV': '636061', 'WI': '636031',
+            'WY': '636060', 'PR': '604431', 'GU': '636019', 'VI': '636062', 'MP': '604430',
+            'AS': '604427'
+        };
+
+        const iinToState = {};
+        for (let st in stateToIIN) {
+            iinToState[stateToIIN[st]] = st;
+        }
+        window.stateToIIN = stateToIIN;
+        window.iinToState = iinToState;
+
+        const statePresets = {
+            'AL': { dl: '1234567', city: 'MONTGOMERY', zip: '36104', address1: '100 NORTH UNION ST', class: 'D', res: 'B', end: 'NONE' },
+            'AK': { dl: '1234567', city: 'ANCHORAGE', zip: '99501', address1: '700 H ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'AZ': { dl: 'A12345678', city: 'PHOENIX', zip: '85001', address1: '1700 W WASHINGTON ST', class: 'D', res: 'A', end: 'NONE' },
+            'AR': { dl: '123456789', city: 'LITTLE ROCK', zip: '72201', address1: '500 WOODLANE ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'CA': { dl: 'F1234567', city: 'LOS ANGELES', zip: '90001', address1: '100 N MAIN ST', class: 'C', res: 'NONE', end: 'NONE' },
+            'CO': { dl: '123456789', city: 'DENVER', zip: '80201', address1: '200 E COLFAX AVE', class: 'R', res: 'NONE', end: 'NONE' },
+            'CT': { dl: '123456789', city: 'HARTFORD', zip: '06101', address1: '210 CAPITOL AVE', class: 'D', res: 'B', end: 'NONE' },
+            'DE': { dl: '1234567', city: 'DOVER', zip: '19901', address1: '401 FEDERAL ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'DC': { dl: '1234567', city: 'WASHINGTON', zip: '20001', address1: '1350 PENNSYLVANIA AVE NW', class: 'D', res: 'NONE', end: 'NONE' },
+            'FL': { dl: 'D123456789012', city: 'MIAMI', zip: '33101', address1: '500 OCEAN DR', class: 'E', res: 'A', end: 'NONE' },
+            'GA': { dl: '123456789', city: 'ATLANTA', zip: '30301', address1: '207 CAPITOL AVE SE', class: 'C', res: 'NONE', end: 'NONE' },
+            'HI': { dl: 'H12345678', city: 'HONOLULU', zip: '96813', address1: '415 S BERETANIA ST', class: 'C', res: 'NONE', end: 'NONE' },
+            'ID': { dl: '123456789', city: 'BOISE', zip: '83701', address1: '700 W JEFFERSON ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'IL': { dl: 'I12345678901', city: 'CHICAGO', zip: '60601', address1: '100 W RANDOLPH ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'IN': { dl: '123456789', city: 'INDIANAPOLIS', zip: '46201', address1: '200 W WASHINGTON ST', class: 'OPER', res: 'NONE', end: 'NONE' },
+            'IA': { dl: '123456789', city: 'DES MOINES', zip: '50301', address1: '1007 E GRAND AVE', class: 'C', res: 'NONE', end: 'NONE' },
+            'KS': { dl: 'K12345678', city: 'TOPEKA', zip: '66601', address1: '300 SW 10TH AVE', class: 'C', res: 'NONE', end: 'NONE' },
+            'KY': { dl: 'K12345678', city: 'FRANKFORT', zip: '40601', address1: '700 CAPITAL AVE', class: 'D', res: 'NONE', end: 'NONE' },
+            'LA': { dl: '123456789', city: 'BATON ROUGE', zip: '70801', address1: '900 N 3RD ST', class: 'E', res: 'NONE', end: 'NONE' },
+            'ME': { dl: '1234567', city: 'AUGUSTA', zip: '04330', address1: '210 STATE ST', class: 'C', res: 'NONE', end: 'NONE' },
+            'MD': { dl: 'M123456789012', city: 'BALTIMORE', zip: '21201', address1: '100 STATE CIRCLE', class: 'C', res: 'NONE', end: 'NONE' },
+            'MA': { dl: 'S12345678', city: 'BOSTON', zip: '02101', address1: '24 BEACON ST', class: 'D', res: 'B', end: 'NONE' },
+            'MI': { dl: 'M123456789012', city: 'DETROIT', zip: '48201', address1: '100 W OTTAWA ST', class: 'O', res: 'NONE', end: 'NONE' },
+            'MN': { dl: 'M123456789012', city: 'MINNEAPOLIS', zip: '55401', address1: '75 REV DR MARTIN LUTHER KING JR BLVD', class: 'D', res: 'NONE', end: 'NONE' },
+            'MS': { dl: '123456789', city: 'JACKSON', zip: '39201', address1: '400 HIGH ST', class: 'R', res: 'NONE', end: 'NONE' },
+            'MO': { dl: 'A123456', city: 'KANSAS CITY', zip: '64101', address1: '201 W CAPITOL AVE', class: 'F', res: 'NONE', end: 'NONE' },
+            'MT': { dl: '1234567890123', city: 'HELENA', zip: '59601', address1: '1301 E 6TH AVE', class: 'D', res: 'NONE', end: 'NONE' },
+            'NE': { dl: 'A123456', city: 'OMAHA', zip: '68101', address1: '1445 K ST', class: 'O', res: 'NONE', end: 'NONE' },
+            'NV': { dl: '123456789', city: 'LAS VEGAS', zip: '89101', address1: '101 N CARSON ST', class: 'C', res: 'NONE', end: 'NONE' },
+            'NH': { dl: '12ABC34567', city: 'CONCORD', zip: '03301', address1: '107 N MAIN ST', class: 'D', res: 'B', end: 'NONE' },
+            'NJ': { dl: 'N12345678901234', city: 'TRENTON', zip: '08601', address1: '125 W STATE ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'NM': { dl: '123456789', city: 'ALBUQUERQUE', zip: '87101', address1: '490 OLD SANTA FE TRL', class: 'D', res: 'NONE', end: 'NONE' },
+            'NY': { dl: '987654321', city: 'NEW YORK', zip: '10001', address1: '350 5TH AVE', class: 'D', res: 'B', end: 'NONE' },
+            'NC': { dl: '123456789012', city: 'RALEIGH', zip: '27601', address1: '1 W EDENTON ST', class: 'C', res: 'NONE', end: 'NONE' },
+            'ND': { dl: 'ABC123456', city: 'BISMARCK', zip: '58501', address1: '600 E BOULEVARD AVE', class: 'D', res: 'NONE', end: 'NONE' },
+            'OH': { dl: 'AB123456', city: 'COLUMBUS', zip: '43201', address1: '1 BROADBENT WAY', class: 'D', res: 'NONE', end: 'NONE' },
+            'OK': { dl: 'A12345678', city: 'OKLAHOMA CITY', zip: '73101', address1: '2300 N LINCOLN BLVD', class: 'D', res: 'NONE', end: 'NONE' },
+            'OR': { dl: '123456789', city: 'SALEM', zip: '97301', address1: '900 COURT ST NE', class: 'C', res: 'NONE', end: 'NONE' },
+            'PA': { dl: '12345678', city: 'PHILADELPHIA', zip: '19101', address1: '501 NORTH OFFICE BLDG', class: 'C', res: 'NONE', end: 'NONE' },
+            'RI': { dl: '1234567', city: 'PROVIDENCE', zip: '02901', address1: '82 SMITH ST', class: 'O', res: 'NONE', end: 'NONE' },
+            'SC': { dl: '123456789', city: 'COLUMBIA', zip: '29201', address1: '1100 GERVAIS ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'SD': { dl: '1234567890', city: 'PIERRE', zip: '57501', address1: '500 E CAPITOL AVE', class: '1', res: 'NONE', end: 'NONE' },
+            'TN': { dl: '123456789', city: 'NASHVILLE', zip: '37201', address1: '600 DR MARTIN L KING JR BLVD', class: 'D', res: 'NONE', end: 'NONE' },
+            'TX': { dl: '01234567', city: 'AUSTIN', zip: '78701', address1: '1100 CONGRESS AVE', class: 'C', res: 'NONE', end: 'NONE' },
+            'UT': { dl: '1234567890', city: 'SALT LAKE CITY', zip: '84101', address1: '350 N STATE ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'VT': { dl: '12345678', city: 'MONTPELIER', zip: '05601', address1: '115 STATE ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'VA': { dl: 'A12345678', city: 'RICHMOND', zip: '23219', address1: '1000 BANK ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'WA': { dl: 'WDL9SGD352OB', city: 'SEATTLE', zip: '98101', address1: '742 EVERGREEN TER', class: 'AUT', res: 'NONE', end: 'NONE' },
+            'WV': { dl: '1234567', city: 'CHARLESTON', zip: '25301', address1: '1900 KANAWHA BLVD E', class: 'E', res: 'NONE', end: 'NONE' },
+            'WI': { dl: 'W1234567890123', city: 'MADISON', zip: '53701', address1: '2 E MAIN ST', class: 'D', res: 'NONE', end: 'NONE' },
+            'WY': { dl: '123456789', city: 'CHEYENNE', zip: '82001', address1: '200 W 24TH ST', class: 'C', res: 'NONE', end: 'NONE' }
+        };
+
+        let selectedBundle = { price: 100, credits: 1 };
+
+        function selectPaymentBundle(price, credits) {
+            selectedBundle = { price: price, credits: credits };
+            document.querySelectorAll('.bundle-card').forEach(card => {
+                card.style.border = '1px solid var(--panel-border)';
+                card.style.background = 'rgba(255,255,255,0.04)';
+            });
+            const activeCard = document.getElementById('bundleCard' + credits);
+            if (activeCard) {
+                activeCard.style.border = '2px solid var(--accent-color)';
+                activeCard.style.background = 'rgba(46,160,67,0.1)';
+            }
+            const labels = document.querySelectorAll('.btnPriceLabel');
+            labels.forEach(el => { el.textContent = 'KES ' + price; });
+        }
+
+        function generateRandomSampleData() {
+            const firstNames = ['JAMES', 'JOHN', 'ROBERT', 'MICHAEL', 'WILLIAM', 'DAVID', 'RICHARD', 'JOSEPH', 'MARY', 'PATRICIA', 'JENNIFER', 'LINDA', 'ELIZABETH', 'BARBARA', 'SUSAN', 'JESSICA', 'SARAH', 'KAREN', 'LISA', 'NANCY'];
+            const lastNames = ['SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA', 'MILLER', 'DAVIS', 'RODRIGUEZ', 'MARTINEZ', 'HERNANDEZ', 'LOPEZ', 'GONZALEZ', 'WILSON', 'ANDERSON'];
+            const middleNames = ['ALEXANDER', 'DANIEL', 'JAMES', 'LEE', 'MICHAEL', 'PAUL', 'ROBERT', 'THOMAS', 'ANN', 'ELIZABETH', 'MARIE', 'GRACE', 'ROSE', ''];
+            const streets = ['MAIN ST', 'OAK AVE', 'MAPLE DR', 'WASHINGTON BLVD', 'CENTER ST', 'PINE RD', 'PARK AVE', 'ELM ST', 'CEDAR LN', 'LAKE RD', 'BROADWAY'];
+
+            const statesList = Object.keys(statePresets);
+            const randomState = statesList[Math.floor(Math.random() * statesList.length)];
+
+            loadStatePreset(randomState);
+
+            const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const mn = middleNames[Math.floor(Math.random() * middleNames.length)];
+            const street = (Math.floor(Math.random() * 8999) + 100) + ' ' + streets[Math.floor(Math.random() * streets.length)];
+
+            setVal('firstName', fn);
+            setVal('lastName', ln);
+            setVal('middleName', mn);
+            setVal('address1', street);
+
+            const y = Math.floor(Math.random() * 27) + 1975;
+            const m = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const d = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+            setVal('dob', y + '-' + m + '-' + d);
+
+            const h = Math.floor(Math.random() * 15) + 62;
+            setVal('height', h);
+            updateHeightHint();
+
+            regenDD();
+            saveFormState();
+            generateBarcode();
+        }
+
+        function getVal(id, defaultVal = '') {
+            const el = document.getElementById(id);
+            return el ? el.value : defaultVal;
+        }
+
+        function setVal(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+
+        function loadStatePreset(st) {
+            if (!st) st = getVal('state', 'WA');
+            const p = statePresets[st];
+            if (!p) return;
+
+            setVal('state', st);
+            if (stateToIIN[st]) setVal('iin', stateToIIN[st]);
+
+            setVal('licenseNumber', p.dl);
+            setVal('city', p.city);
+            setVal('zip', p.zip);
+            setVal('address1', p.address1);
+            setVal('vehicleClass', p.class || 'D');
+            setVal('restrictions', p.res || 'NONE');
+            setVal('endorsements', p.end || 'NONE');
+
+            if (!getVal('lastName')) setVal('lastName', 'DOE');
+            if (!getVal('firstName')) setVal('firstName', 'JANE');
+
+            regenDD();
+            updateDLFormat();
+            generateBarcode();
+        }
+
+        function onIINChange() {
+            const iinVal = getVal('iin');
+            const map = typeof iinToState !== 'undefined' ? iinToState : (window.iinToState || {});
+            if (map[iinVal]) {
+                setVal('state', map[iinVal]);
+                updateDLFormat();
+            }
+        }
+
+        function onStateChange() {
+            const st = getVal('state');
+            if (stateToIIN[st]) {
+                setVal('iin', stateToIIN[st]);
+            }
+            updateDLFormat();
+        }
+
+        // ================= Payment State & Paywall (Per Barcode Generation) =================
+        let appConfig = { price: 0, currency: 'KES', mockMode: false };
+        let activePollTimer = null;
+        let activeCheckoutID = null;
+
+        function safeGetStorage(key) {
+            try {
+                if (typeof localStorage !== 'undefined' && localStorage) {
+                    return localStorage.getItem(key);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveFormState() {
+            const fields = ['lastName', 'firstName', 'middleName', 'suffix', 'dob', 'sex', 'height', 'weight', 'eyeColor', 'hairColor', 'issueDate', 'expirationDate', 'address1', 'address2', 'city', 'state', 'zip', 'vehicleClass', 'restrictions', 'endorsements', 'licenseNumber', 'iin', 'aamvaVersion', 'jurisdictionVersion'];
+            const state = {};
+            fields.forEach(id => { state[id] = getVal(id); });
+            safeSetStorage('visualarc_form_state', JSON.stringify(state));
+        }
+
+        function restoreFormState() {
+            const saved = safeGetStorage('visualarc_form_state');
+            if (!saved) return false;
+            try {
+                const state = JSON.parse(saved);
+                if (!state.licenseNumber) return false;
+                Object.keys(state).forEach(id => setVal(id, state[id]));
+                return true;
+            } catch (e) { return false; }
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                if (typeof localStorage !== 'undefined' && localStorage) {
+                    localStorage.setItem(key, val);
+                }
+            } catch (e) {}
+        }
+
+        function getBarcodeHash(raw) {
+            if (!raw) return 'none';
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+                hash |= 0;
+            }
+            return 'paid_bc_' + Math.abs(hash);
+        }
+
+        function getRemainingCredits() {
+            const credits = parseInt(safeGetStorage('visualarc_barcode_credits') || '0', 10);
+            return isNaN(credits) || credits < 0 ? 0 : credits;
+        }
+
+        function setRemainingCredits(n) {
+            safeSetStorage('visualarc_barcode_credits', String(Math.max(0, n)));
+            updatePayUI();
+        }
+
+        function addPaymentCredits(amountOfCredits = 1) {
+            const current = getRemainingCredits();
+            const newTotal = current + amountOfCredits;
+            safeSetStorage('visualarc_barcode_credits', String(newTotal));
+            updatePayUI();
+        }
+
+        function isCurrentBarcodePaid() {
+            if (appConfig.price <= 0) return true; // Free test mode
+            if (!currentRaw) return false;
+            
+            const hash = getBarcodeHash(currentRaw);
+            const paidMap = JSON.parse(safeGetStorage('visualarc_paid_barcodes') || '{}');
+            return !!paidMap[hash];
+        }
+
+        function consumeCreditIfRequired() {
+            if (!currentRaw) return false;
+            if (appConfig.price <= 0) return true;
+            const hash = getBarcodeHash(currentRaw);
+            const paidMap = JSON.parse(safeGetStorage('visualarc_paid_barcodes') || '{}');
+            if (paidMap[hash]) return true; // Already paid/unlocked
+
+            const credits = getRemainingCredits();
+            if (credits > 0) {
+                paidMap[hash] = { timestamp: Date.now() };
+                safeSetStorage('visualarc_paid_barcodes', JSON.stringify(paidMap));
+                safeSetStorage('visualarc_barcode_credits', String(Math.max(0, credits - 1)));
+                updatePayUI();
+                return true;
+            }
+
+            return false;
+        }
+
+        function markCurrentBarcodePaid(receipt) {
+            addPaymentCredits(1);
+        }
+
+        function checkPaymentState() {
+            updatePayUI();
+        }
+
+        function updatePayUI() {
+            const badge = document.getElementById('payStatusBadge');
+            const downloadBtns = document.getElementById('downloadBtns');
+            const resetBtn = document.getElementById('resetAccessBtn');
+
+            if (!badge) return;
+
+            if (appConfig.price <= 0) {
+                badge.className = 'pay-badge unlocked';
+                badge.onclick = null;
+                badge.innerHTML = '🎁 FREE TEST MODE (ALL UNLOCKED)';
+                if (resetBtn) resetBtn.style.display = 'none';
+                return;
+            }
+
+            const credits = getRemainingCredits();
+            const isPaid = isCurrentBarcodePaid();
+
+            if (isPaid || credits > 0) {
+                badge.className = 'pay-badge unlocked';
+                badge.onclick = function() {
+                    alert('⚡ You have ' + credits + ' Barcode Generation Credit' + (credits === 1 ? '' : 's') + ' available!');
+                };
+                badge.innerHTML = '⚡ ' + credits + ' CREDIT' + (credits === 1 ? '' : 'S') + ' AVAILABLE — Click Generate / Download';
+                if (resetBtn) resetBtn.style.display = 'inline';
+            } else {
+                badge.className = 'pay-badge locked';
+                badge.onclick = openPayModal;
+                badge.innerHTML = '🔒 0 CREDITS — BUY CREDITS (' + appConfig.currency + ' ' + appConfig.price + ')';
+                if (resetBtn) resetBtn.style.display = 'none';
+            }
+        }
+
+        async function fetchAPI(endpoint, options = {}) {
+            let res = await fetch(endpoint, options);
+            if (!res.ok && res.status === 405 && !endpoint.includes('.js')) {
+                const altEndpoint = endpoint + '.js';
+                res = await fetch(altEndpoint, options);
+            }
+            if (!res.ok && res.status === 405 && options && options.method === 'POST') {
+                try {
+                    const parsed = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+                    const query = new URLSearchParams(parsed).toString();
+                    const getEndpoint = (endpoint.includes('.js') ? endpoint : endpoint + '.js') + '?' + query;
+                    res = await fetch(getEndpoint, { method: 'GET' });
+                } catch (e) {}
+            }
+            return res;
+        }
+
+        async function fetchAppConfig() { appConfig.price = 0; return;
+            try {
+                const res = await fetchAPI('/api/config');
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch (e) { return; }
+                if (res.ok && data) {
+                    appConfig = data;
+                    document.querySelectorAll('.badge-price, .btnPriceLabel').forEach(el => {
+                        el.textContent = appConfig.currency + ' ' + appConfig.price;
+                    });
+                    document.getElementById('modalPrice').textContent = appConfig.currency + ' ' + appConfig.price;
+                    if (appConfig.mockMode) {
+                        document.getElementById('mockBanner').style.display = 'block';
+                    } else {
+                        document.getElementById('mockBanner').style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch /api/config:', e);
+            }
+        }
+
+        let mpesaReceiverNumber = safeGetStorage('visualarc_mpesa_receiver') || '0795852494';
+
+        function editMpesaReceiver() {
+            const val = prompt('Enter your personal M-Pesa Phone Number or Buy Goods Till Number to receive cash directly:', mpesaReceiverNumber);
+            if (val && val.trim()) {
+                mpesaReceiverNumber = val.trim();
+                safeSetStorage('visualarc_mpesa_receiver', mpesaReceiverNumber);
+                updateMpesaReceiverDisplay();
+            }
+        }
+
+        function updateMpesaReceiverDisplay() {
+            const el = document.getElementById('mpesaNumberDisplay');
+            if (el) el.textContent = 'M-Pesa: ' + mpesaReceiverNumber;
+        }
+
+        function switchPayTab(mode) {
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+            const modeStk = document.getElementById('payModeStk');
+            if (modeStk) modeStk.style.display = 'block';
+        }
+
+        async function verifyMpesaCode() {
+            const input = document.getElementById('mpesaCodeInput');
+            const code = (input ? input.value : '').trim().toUpperCase();
+            const errEl = document.getElementById('paymentError');
+
+            if (errEl) errEl.style.display = 'none';
+
+            if (!code || !/^[A-Z0-9]{10}$/.test(code)) {
+                if (errEl) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = '❌ Invalid format! M-Pesa codes must be 10 characters (e.g. SJK1234567).';
+                }
+                return;
+            }
+
+            try {
+                const res = await fetchAPI('/api/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                const text = await res.text();
+                let data = {};
+                try { data = JSON.parse(text); } catch (e) {}
+
+                if (res.ok && data.success) {
+                    addPaymentCredits(data.credits || 1);
+                    if (input) input.value = '';
+                    closePayModal();
+                    alert('✅ Payment Verified! 1 Barcode Generation Credit granted.');
+                } else {
+                    if (errEl) {
+                        errEl.style.display = 'block';
+                        errEl.textContent = data.error || '❌ Unverified code. Payment has not been received for ' + code + ' on 0795852494.';
+                    }
+                }
+            } catch (err) {
+                if (errEl) {
+                    errEl.style.display = 'block';
+                    errEl.textContent = '❌ Verification error: ' + err.message;
+                }
+            }
+        }
+
+        async function adminAddMpesaCode() {
+            const adminPin = prompt('Owner Admin Authentication:\nEnter your M-Pesa phone number:');
+            if (adminPin !== '0795852494') {
+                alert('❌ Unauthorized admin number.');
+                return;
+            }
+            const code = prompt('Enter the real M-Pesa Transaction Code received on 0795852494 (e.g. SJK1234567):');
+            if (!code || !code.trim()) return;
+
+            try {
+                const res = await fetchAPI('/api/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', adminKey: '0795852494', code: code.trim().toUpperCase() })
+                });
+                const text = await res.text();
+                let data = {};
+                try { data = JSON.parse(text); } catch (e) {}
+                if (res.ok && data.success) {
+                    alert('✅ Success! M-Pesa code ' + code.toUpperCase() + ' is now approved in the database.');
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Could not approve code.'));
+                }
+            } catch (e) {
+                alert('❌ Error approving code: ' + e.message);
+            }
+        }
+
+        function showPaymentSuccessScreen(receipt) {
+            consumeCreditIfRequired();
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+            if (document.getElementById('payIframeContainer')) document.getElementById('payIframeContainer').style.display = 'none';
+
+            const successEl = document.getElementById('paymentSuccess');
+            const msgEl = document.getElementById('successReceiptMsg');
+            const imgPreview = document.getElementById('modalBarcodePreview');
+            const canvas = document.getElementById('barcode-canvas');
+
+            const credits = getRemainingCredits();
+            if (msgEl) msgEl.textContent = 'Receipt: ' + (receipt || 'M-PESA VERIFIED') + ' — ' + credits + ' credit' + (credits === 1 ? '' : 's') + ' remaining. Your barcode is ready to download:';
+            if (imgPreview && canvas) {
+                imgPreview.src = canvas.toDataURL('image/png');
+            }
+
+            if (successEl) successEl.style.display = 'block';
+            document.getElementById('payModal').style.display = 'flex';
+            updatePayUI();
+        }
+
+        function scrollToBarcode() {
+            const canvas = document.getElementById('barcode-canvas');
+            if (canvas) canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function copyRawPayloadModal() {
+            if (!currentRaw) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentRaw);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = currentRaw;
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta);
+            }
+            alert('📋 Raw AAMVA Barcode Code copied to clipboard!');
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        function openPayModal() {
+            fetchAppConfig();
+            updateMpesaReceiverDisplay();
+            document.getElementById('payModal').style.display = 'flex';
+            if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+            if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+            if (document.getElementById('payIframeContainer')) document.getElementById('payIframeContainer').style.display = 'none';
+            if (document.getElementById('paymentSuccess')) document.getElementById('paymentSuccess').style.display = 'none';
+            if (document.getElementById('paymentError')) document.getElementById('paymentError').style.display = 'none';
+        }
+
+        function closePayModal() {
+            document.getElementById('payModal').style.display = 'none';
+            if (document.getElementById('paystackIframe')) document.getElementById('paystackIframe').src = 'about:blank';
+            if (document.getElementById('paymentSuccess')) document.getElementById('paymentSuccess').style.display = 'none';
+            if (activePollTimer) clearInterval(activePollTimer);
+        }
+
+        function resetPaymentAccess() {
+            localStorage.removeItem('visualarc_paid_barcodes');
+            checkPaymentState();
+            alert('Paid barcodes history cleared.');
+        }
+
+        function handlePaymentSuccess(creditsAdded, receipt) {
+            closePayModal();
+            addPaymentCredits(creditsAdded);
+
+            // Redirect top-level browser window back to full screen main app if inside iframe
+            if (window.top && window.top !== window.self) {
+                try {
+                    window.top.location.href = window.location.origin + window.location.pathname + '?paid=1&credits=' + creditsAdded + '&ref=' + encodeURIComponent(receipt || 'M-PESA');
+                    return;
+                } catch(e) {}
+            }
+
+            showConfirmationBanner(creditsAdded, receipt);
+        }
+
+        function showConfirmationBanner(creditsAdded, receipt) {
+            const banner = document.getElementById('paymentConfirmedBanner');
+            const bTitle = document.getElementById('bannerTitle');
+            const bSub = document.getElementById('bannerSub');
+
+            const total = getRemainingCredits();
+            if (bTitle) bTitle.innerHTML = '🎉 Payment Confirmed! Added ' + creditsAdded + ' Credit' + (creditsAdded === 1 ? '' : 's') + ' (Total: ' + total + ' Available)';
+            if (bSub) bSub.innerHTML = 'Receipt: <strong>' + (receipt || 'M-PESA VERIFIED') + '</strong>. Fill in customer details below and click <strong>"⚡ Generate Barcode"</strong> to use 1 credit.';
+            
+            if (banner) {
+                banner.style.display = 'block';
+                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function checkReturnPayment() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('paid') === '1') {
+                const addedCredits = parseInt(urlParams.get('credits') || '1', 10);
+                const ref = urlParams.get('ref') || 'M-PESA';
+                showConfirmationBanner(addedCredits, ref);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            const ref = urlParams.get('reference') || urlParams.get('trxref');
+            if (ref) {
+                try {
+                    const res = await fetchAPI('/api/stkstatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ CheckoutRequestID: ref })
+                    });
+                    const data = await res.json().catch(() => null);
+                    if (data && data.status === 'COMPLETED') {
+                        const savedCredits = parseInt(safeGetStorage('visualarc_pending_credits') || '1', 10);
+                        const credits = (data && data.credits) ? data.credits : (selectedBundle && selectedBundle.credits > 1 ? selectedBundle.credits : savedCredits);
+                        handlePaymentSuccess(credits, data.receipt || ref);
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {}
+            }
+        }
+
+        async function initiateMpesaPayment() {
+            const phoneInput = document.getElementById('payPhone').value.trim();
+            const errEl = document.getElementById('paymentError');
+            if (errEl) errEl.style.display = 'none';
+
+            if (!phoneInput) {
+                if (errEl) {
+                    errEl.textContent = '❌ Please enter a valid M-Pesa phone number.';
+                    errEl.style.display = 'block';
+                }
+                return;
+            }
+
+            try {
+                safeSetStorage('visualarc_pending_credits', String(selectedBundle.credits));
+                const res = await fetchAPI('/api/stkpush', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phoneInput, amount: selectedBundle.price, credits: selectedBundle.credits })
+                });
+
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('API server returned non-JSON response (' + res.status + '): ' + text.substring(0, 80));
+                }
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to initialize payment session.');
+                }
+
+                activeCheckoutID = data.CheckoutRequestID;
+
+                // Load Paystack Official Secure Checkout inside Modal Iframe
+                if (data.redirectUrl) {
+                    if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                    if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+                    
+                    const iframeContainer = document.getElementById('payIframeContainer');
+                    const iframe = document.getElementById('paystackIframe');
+                    if (iframeContainer && iframe) {
+                        iframe.src = data.redirectUrl;
+                        iframeContainer.style.display = 'block';
+                    } else {
+                        window.open(data.redirectUrl, '_blank');
+                    }
+
+                    startStatusPolling(data.CheckoutRequestID, data.phone);
+                    return;
+                }
+
+                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'none';
+                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'block';
+                document.getElementById('statusTitle').textContent = 'Check Your Mobile Phone!';
+                document.getElementById('statusDesc').textContent = 'STK Push prompt sent to ' + data.phone + '. Please enter your M-Pesa PIN.';
+
+                startStatusPolling(data.CheckoutRequestID, data.phone);
+
+            } catch (err) {
+                if (document.getElementById('paymentStatus')) document.getElementById('paymentStatus').style.display = 'none';
+                if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+                if (errEl) {
+                    errEl.textContent = '❌ ' + err.message;
+                    errEl.style.display = 'block';
+                }
+            }
+        }
+
+        function startStatusPolling(checkoutID, phone) {
+            if (activePollTimer) clearInterval(activePollTimer);
+            let attempts = 0;
+            const maxAttempts = 120; // Poll continuously for 5 minutes
+
+            activePollTimer = setInterval(async () => {
+                attempts++;
+
+                const descEl = document.getElementById('statusDesc');
+                if (descEl && attempts > 1) {
+                    descEl.textContent = '⌛ Waiting for M-Pesa PIN entry on ' + phone + '... (Checking payment status...)';
+                }
+
+                if (attempts > maxAttempts) {
+                    clearInterval(activePollTimer);
+                    document.getElementById('paymentStatus').style.display = 'none';
+                    if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+                    const errEl = document.getElementById('paymentError');
+                    if (errEl) {
+                        errEl.textContent = '⏱️ Payment timed out after 5 minutes. Did not receive PIN confirmation.';
+                        errEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                try {
+                    const res = await fetchAPI('/api/stkstatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ CheckoutRequestID: checkoutID, phone: phone })
+                    });
+                    const text = await res.text();
+                    let data;
+                    try { data = JSON.parse(text); } catch (e) { return; }
+
+                    if (data.status === 'COMPLETED') {
+                        clearInterval(activePollTimer);
+                        const savedCredits = parseInt(safeGetStorage('visualarc_pending_credits') || '1', 10);
+                        const credits = (data && data.credits) ? data.credits : (selectedBundle && selectedBundle.credits > 1 ? selectedBundle.credits : savedCredits);
+                        handlePaymentSuccess(credits, data.receipt || checkoutID);
+                        return;
+                    } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
+                        clearInterval(activePollTimer);
+                        document.getElementById('paymentStatus').style.display = 'none';
+                        if (document.getElementById('paymentForm')) document.getElementById('paymentForm').style.display = 'block';
+                        const errEl = document.getElementById('paymentError');
+                        if (errEl) {
+                            errEl.textContent = '❌ ' + (data.message || 'Payment prompt timed out or was declined on mobile phone. Please try again.');
+                            errEl.style.display = 'block';
+                        }
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('Polling status error:', err);
+                }
+            }, 2500);
+        }
+
+        async function forceMockPayment(state) {
+            if (!activeCheckoutID) return;
+            try {
+                const res = await fetchAPI('/api/stkstatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ CheckoutRequestID: activeCheckoutID, forceState: state })
+                });
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch (e) { return; }
+
+                if (data.status === 'COMPLETED') {
+                    markCurrentBarcodePaid(data.receipt || 'M-PESA');
+                    document.getElementById('statusTitle').textContent = '🎉 Payment Confirmed (Mock)!';
+                    setTimeout(() => {
+                        closePayModal();
+                    }, 800);
+                } else {
+                    document.getElementById('paymentStatus').style.display = 'none';
+                    document.getElementById('paymentForm').style.display = 'block';
+                    const errEl = document.getElementById('paymentError');
+                    errEl.textContent = '❌ Mock action: ' + state;
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function canAccessBarcode() {
+            if (appConfig.price <= 0) return true;
+            if (isCurrentBarcodePaid()) return true;
+            if (getRemainingCredits() > 0) return true;
+            return false;
+        }
+
+        function handleDownload(type) {
+            if (!canAccessBarcode()) {
+                openPayModal();
+                return;
+            }
+            if (type === 'png') downloadPNG();
+            if (type === 'svg') downloadSVG();
+        }
+
+        // ================= State helpers =================
+        function updateDLFormat() {
+            const state = getVal('state', 'WA');
+            const hint = document.getElementById('dlHint');
+            const status = document.getElementById('dlStatus');
+            const dlInput = document.getElementById('licenseNumber');
+
+            const iinSelect = document.getElementById('iin');
+            if (iinSelect && stateToIIN[state]) iinSelect.value = stateToIIN[state];
+
+            if (hint && status && dlInput) {
+                if (dlFormats[state]) {
+                    hint.textContent = 'Example: ' + dlFormats[state].example;
+                    status.textContent = '⚠️ Enter valid ' + state + ' DL number';
+                    status.className = 'dl-status warning';
+                    dlInput.placeholder = dlFormats[state].example.split(' / ')[0];
+                } else {
+                    hint.textContent = 'Enter your DL number';
+                    status.textContent = '⚠️ Enter your DL number';
+                    status.className = 'dl-status warning';
+                }
+            }
+            validateDL();
+        }
+
+        function validateDL() {
+            const rawDl = getVal('licenseNumber').trim().toUpperCase();
+            const dl = rawDl.replace(/[\s\-]/g, '');
+            const state = getVal('state', 'WA');
+            const status = document.getElementById('dlStatus');
+            if (!status) return true;
+            if (!dl) {
+                status.textContent = '⚠️ License Number required';
+                status.className = 'dl-status warning';
+                return false;
+            }
+            status.textContent = '✅ Valid ' + state + ' DL number';
+            status.className = 'dl-status valid';
+            return true;
+        }
+
+        function updateHeightHint() {
+            const h = parseInt(getVal('height', '64'), 10);
+            const hint = document.getElementById('heightHint');
+            if (!hint) return;
+            if (!isNaN(h) && h >= 36 && h <= 96) {
+                const ft = Math.floor(h / 12), inch = h % 12;
+                hint.textContent = ft + ' ft ' + inch + ' in';
+                hint.className = 'hint right';
+            } else {
+                hint.textContent = '36–96 inches';
+                hint.className = 'hint';
+            }
+        }
+
+        function regenDD() {
+            setVal('dd', AAMVA.randomDD());
+            scheduleRegen();
+        }
+
+        function collectOpts() {
+            const now = new Date();
+            const defaultExp = new Date(now);
+            defaultExp.setFullYear(defaultExp.getFullYear() + 5);
+
+            const rawIin = (getVal('iin') || '636048').trim();
+            const rawAamva = (getVal('aamvaVersion') || '10').trim();
+            const rawJur = (getVal('jurisdictionVersion') || '01').trim();
+
+            return {
+                country: 'USA',
+                iin: rawIin.length === 6 ? rawIin : '636048',
+                aamvaVersion: rawAamva || '10',
+                jurisdictionVersion: rawJur || '01',
+                docType: getVal('docType') || 'DL',
+                lastName: (getVal('lastName') || 'DOE').trim(),
+                firstName: (getVal('firstName') || 'JANE').trim(),
+                middleName: getVal('middleName').trim(),
+                suffix: getVal('suffix').trim(),
+                dob: (getVal('dob') || '1995-05-15').trim(),
+                issueDate: (getVal('issueDate') || localDateStr(now)).trim(),
+                expirationDate: (getVal('expirationDate') || localDateStr(defaultExp)).trim(),
+                sex: getVal('sex') || '2',
+                heightInches: getVal('height') || '64',
+                weightLbs: getVal('weight') || '130',
+                eyeColor: getVal('eyeColor') || 'BRO',
+                hairColor: getVal('hairColor') || 'BRO',
+                street1: (getVal('address1') || '742 EVERGREEN TER').trim(),
+                street2: getVal('address2').trim(),
+                city: (getVal('city') || 'SEATTLE').trim(),
+                state: getVal('state') || 'WA',
+                zip: (getVal('zip') || '98101').trim(),
+                licenseNumber: (getVal('licenseNumber') || 'WDL9SGD352OB').trim().toUpperCase().replace(/[\s\-]/g, '') || 'WDL9SGD352OB',
+                vehicleClass: getVal('vehicleClass') || 'AUT',
+                restrictions: getVal('restrictions') || 'NONE',
+                endorsements: getVal('endorsements') || 'NONE',
+                documentDiscriminator: (getVal('dd') || AAMVA.randomDD()).trim()
+            };
+        }
+
+        // ================= Generate =================
+        let currentRaw = null;
+        let currentBuilt = null;
+        let liveMode = false;
+        let regenTimer = null;
+
+        function getBwipOpts(overrideScale) {
+            const colsVal = getVal('barcodeColumns') || '6';
+            const rowHVal = getVal('barcodeRowHeight') || '4';
+            const bgMode = getVal('barcodeBg') || 'transparent';
+
+            const parsedCols = parseInt(colsVal, 10);
+            const parsedRowH = parseInt(rowHVal, 10);
+
+            const opts = {
+                bcid: 'pdf417',
+                scale: overrideScale || 3,
+                columns: (isNaN(parsedCols) || parsedCols < 1) ? 6 : parsedCols,
+                height: (isNaN(parsedRowH) || parsedRowH < 1) ? 4 : parsedRowH,
+                parse: false,
+                includetext: false
+            };
+
+            if (bgMode !== 'transparent') {
+                opts.backgroundcolor = bgMode;
+            }
+
+            return opts;
+        }
+
+        function generateBarcode() {
+            const canvas = document.getElementById('barcode-canvas');
+            const placeholder = document.getElementById('placeholder');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (errorMsg) errorMsg.classList.remove('show');
+
+            const rawDl = getVal('licenseNumber').trim().toUpperCase();
+            const dlNumber = rawDl.replace(/[\s\-]/g, '');
+
+            if (!dlNumber) {
+                if (errorMsg) {
+                    errorMsg.textContent = '❌ License Number is required!';
+                    errorMsg.classList.add('show');
+                }
+                return;
+            }
+
+            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+            if (!bwipEngine) {
+                if (errorMsg) {
+                    errorMsg.textContent = '⏳ Barcode rendering engine is loading, please try again in 2 seconds...';
+                    errorMsg.classList.add('show');
+                }
+                return;
+            }
+
+            try {
+                const built = AAMVA.buildAAMVA(collectOpts());
+                currentBuilt = built;
+                currentRaw = built.raw;
+
+                if (canvas) bwipEngine.toCanvas(canvas, Object.assign({}, getBwipOpts(), { text: built.raw }));
+
+                if (placeholder) placeholder.style.display = 'none';
+                if (canvas) canvas.style.display = 'block';
+                const dlBtns = document.getElementById('downloadBtns');
+                if (dlBtns) dlBtns.style.display = 'flex';
+
+                checkPaymentState();
+
+                updateSpecStrip(built);
+                updateRawPanel();
+                updateVerifyPanel();
+
+                liveMode = true;
+                const lb = document.getElementById('liveBadge');
+                if (lb) lb.style.display = 'inline-block';
+            } catch (e) {
+                console.error(e);
+                if (errorMsg) {
+                    errorMsg.textContent = '❌ Error: ' + e.message;
+                    errorMsg.classList.add('show');
+                }
+            }
+        }
+
+        function scheduleRegen() {
+            if (!liveMode) return;
+            clearTimeout(regenTimer);
+            regenTimer = setTimeout(generateBarcode, 250);
+        }
+
+        function updateSpecStrip(built) {
+            if (!built || !built.header) return;
+            const v = built.header.aamvaVersion || '10';
+            const year = built.header.aamvaYear || '2020';
+            const des0 = (built.header.designators && built.header.designators[0]) ? built.header.designators[0] : { designator: 'DL', offset: 0, length: 0 };
+            const des = des0.designator;
+            const entries = built.header.numberOfEntries || 1;
+            const count = built.elementCount || 0;
+            const len = built.totalLength || 0;
+
+            const specVer = document.getElementById('spec-version');
+            if (specVer) specVer.textContent = v + ' (' + year + ')';
+            const specIin = document.getElementById('spec-iin');
+            if (specIin) specIin.textContent = built.header.iin || '';
+            const specEnt = document.getElementById('spec-entries');
+            if (specEnt) specEnt.textContent = des + ' / ' + entries;
+            const specEl = document.getElementById('spec-elements');
+            if (specEl) specEl.textContent = count;
+            const specLen = document.getElementById('spec-length');
+            if (specLen) specLen.textContent = len + ' chars';
+            const specNote = document.getElementById('specNote');
+            if (specNote) specNote.innerHTML = 'Version <strong>' + v + '</strong> (' + year +
+                ') payload — single <strong>' + des + '</strong> subfile, ' +
+                count + ' elements, offset ' + des0.offset + ', length ' + des0.length + '.';
+        }
+
+        // ================= Raw data panel =================
+        let rawMode = 'pretty';
+
+        function setRawMode(mode) {
+            rawMode = mode;
+            document.getElementById('btnPretty').className = mode === 'pretty' ? 'active' : '';
+            document.getElementById('btnEscaped').className = mode === 'escaped' ? 'active' : '';
+            updateRawPanel();
+        }
+
+        function updateRawPanel() {
+            const el = document.getElementById('rawContent');
+            if (!currentRaw) return;
+
+            if (!canAccessBarcode()) {
+                el.innerHTML = '<div style="text-align:center; padding: 20px; color:#f0883e;">🔒 Purchase credits (' + appConfig.currency + ' ' + appConfig.price + ') to reveal raw payload and copy code.<br><br><button class="pay-btn-glow" onclick="openPayModal()">📱 Buy Credits (' + appConfig.currency + ' ' + appConfig.price + ')</button></div>';
+                return;
+            }
+
+            if (rawMode === 'escaped') {
+                el.textContent = AAMVA.escapedRaw(currentRaw);
+                return;
+            }
+
+            const raw = currentRaw;
+            const numEntries = currentBuilt ? currentBuilt.header.numberOfEntries : 1;
+            const headerLen = 21 + 10 * numEntries;
+            let html = '<span class="hdr">@␊␞␍ANSI </span>';
+            html += '<span class="hdr">' + escapeHtml(raw.substring(9, headerLen)) + '</span>';
+            for (let i = headerLen; i < raw.length; i++) {
+                const code = raw.charCodeAt(i);
+                if (code === 10) { html += '<br>'; continue; }
+                if (code === 13) { html += '<span class="ctl">␍</span><br>'; continue; }
+                if (code === 30) { html += '<span class="ctl">␞</span>'; continue; }
+                if ((i === headerLen || raw.charCodeAt(i - 1) === 13) &&
+                    code >= 65 && code <= 90 && raw.charCodeAt(i + 1) >= 65 && raw.charCodeAt(i + 1) <= 90) {
+                    html += '<span class="hdr">' + escapeHtml(raw.substr(i, 2)) + '</span>';
+                    i += 1;
+                    continue;
+                }
+                if (code >= 65 && code <= 90 && i + 2 < raw.length &&
+                    raw.charCodeAt(i + 1) >= 65 && raw.charCodeAt(i + 1) <= 90 &&
+                    raw.charCodeAt(i + 2) >= 65 && raw.charCodeAt(i + 2) <= 90) {
+                    html += '<span class="eid">' + escapeHtml(raw.substr(i, 3)) + '</span>';
+                    i += 2;
+                } else {
+                    html += escapeHtml(raw[i]);
+                }
+            }
+            el.innerHTML = html;
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function copyRaw(ev) {
+            if (!canAccessBarcode()) {
+                openPayModal();
+                return;
+            }
+            if (!currentRaw) return;
+            const btn = ev && ev.target;
+            const done = () => { if (!btn) return; const t = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = t, 1200); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentRaw).then(done, done);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = currentRaw;
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta); done();
+            }
+        }
+
+        // ================= Verification panel =================
+        const EYE_NAMES = { BLK:'Black', BLU:'Blue', BRO:'Brown', GRY:'Gray', GRN:'Green', HAZ:'Hazel', MAR:'Maroon', PNK:'Pink', DIC:'Dichromatic', UNK:'Unknown' };
+        const HAIR_NAMES = { BAL:'Bald', BLK:'Black', BLN:'Blond', BRO:'Brown', GRY:'Gray', RED:'Red/Auburn', SDY:'Sandy', WHI:'White', UNK:'Unknown' };
+        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function humanizeValue(id, v) {
+            if (!v) return '';
+            if (['DBA','DBB','DBD','DDB','DDC'].indexOf(id) >= 0 && /^\d{8}$/.test(v)) {
+                const m = parseInt(v.substring(0,2), 10);
+                const d = parseInt(v.substring(2,4), 10);
+                const y = v.substring(4);
+                if (m >= 1 && m <= 12) {
+                    return v + ' → ' + MONTHS[m-1] + ' ' + d + ', ' + y;
+                }
+            }
+            if (id === 'DBC') return v + ' → ' + ({'1':'Male','2':'Female','9':'Not specified'}[v] || v);
+            if (id === 'DAU' && /^\d{3}/.test(v)) {
+                const inch = parseInt(v.substring(0,3), 10);
+                if (!isNaN(inch)) return v + ' (' + Math.floor(inch/12) + ' ft ' + (inch%12) + ' in)';
+            }
+            if (id === 'DAY') return v + ' → ' + (EYE_NAMES[v] || v);
+            if (id === 'DAZ') return v + ' → ' + (HAIR_NAMES[v] || v);
+            if (['DDE','DDF','DDG'].indexOf(id) >= 0) return v + ' → ' + ({'N':'Not truncated','T':'Truncated','U':'Unknown'}[v] || v);
+            return v;
+        }
+
+        function updateVerifyPanel() {
+            const badge = document.getElementById('verifyBadge');
+            const parsed = AAMVA.parseAAMVA(currentRaw);
+            const warns = (currentBuilt ? currentBuilt.warnings : []).concat(parsed.warnings || []);
+
+            if (parsed.header && parsed.header.iin) {
+                const map = typeof iinToState !== 'undefined' ? iinToState : (window.iinToState || {});
+                const expectedState = map[parsed.header.iin];
+                let actualState = null;
+                parsed.subfiles.forEach(sf => {
+                    sf.elements.forEach(el => {
+                        if (el.id === 'DAJ') actualState = el.value;
+                    });
+                });
+                if (expectedState && actualState && expectedState !== actualState) {
+                    warns.push('⚠️ Issuer IIN (' + parsed.header.iin + ' → ' + expectedState + ') does not match Jurisdiction State (' + actualState + ').');
+                }
+            }
+
+            if (badge) {
+                if (parsed.valid) {
+                    badge.className = 'verify-badge ok';
+                    badge.textContent = '✅ VALID — payload parses back cleanly';
+                } else {
+                    badge.className = 'verify-badge bad';
+                    badge.textContent = '❌ INVALID — ' + parsed.errors.length + ' error' + (parsed.errors.length > 1 ? 's' : '');
+                }
+            }
+
+            const hb = document.getElementById('verifyHeaderBody');
+            const hs = document.getElementById('verifyHeaderSection');
+            if (parsed.header && hs && hb) {
+                hs.style.display = 'block';
+                hb.innerHTML = '';
+                const rows = [
+                    ['Header magic', '@ ␊ ␞ ␍ ANSI '],
+                    ['Issuer ID (IIN)', parsed.header.iin],
+                    ['AAMVA version', parsed.header.aamvaVersion + (parsed.header.aamvaYear ? ' (' + parsed.header.aamvaYear + ')' : '')],
+                    ['Jurisdiction version', parsed.header.jurisdictionVersion],
+                    ['Number of entries', parsed.header.numberOfEntries]
+                ];
+                parsed.header.designators.forEach(d => {
+                    rows.push(['Subfile "' + d.designator + '"', 'offset ' + d.offset + ' · length ' + d.length + ' · ends ' + (d.offset + d.length)]);
+                });
+                rows.forEach(r => {
+                    hb.innerHTML += '<tr><td class="lbl">' + r[0] + '</td><td class="val">' + escapeHtml(String(r[1])) + '</td></tr>';
+                });
+            } else if (hs) {
+                hs.style.display = 'none';
+            }
+
+            const eb = document.getElementById('verifyElementsBody');
+            const es = document.getElementById('verifyElementsSection');
+            if (eb) eb.innerHTML = '';
+            let count = 0;
+            parsed.subfiles.forEach(sf => {
+                sf.elements.forEach(el => {
+                    count++;
+                    const label = AAMVA.ELEMENT_LABELS[el.id] || 'Jurisdiction element';
+                    if (eb) eb.innerHTML += '<tr><td class="mono">' + el.id + '</td><td class="lbl">' + label + '</td><td class="val">' + escapeHtml(humanizeValue(el.id, el.value)) + '</td></tr>';
+                });
+            });
+            const elCount = document.getElementById('verifyElCount');
+            if (elCount) elCount.textContent = count;
+            if (es) es.style.display = count ? 'block' : 'none';
+
+            const ws = document.getElementById('verifyWarnSection');
+            const wl = document.getElementById('verifyWarnList');
+            if (ws && wl) {
+                if (warns.length) {
+                    ws.style.display = 'block';
+                    wl.innerHTML = warns.map(escapeHtml).join('<br>');
+                } else { ws.style.display = 'none'; }
+            }
+            const er = document.getElementById('verifyErrSection');
+            const elist = document.getElementById('verifyErrList');
+            if (er && elist) {
+                if (parsed.errors.length) {
+                    er.style.display = 'block';
+                    elist.innerHTML = parsed.errors.map(escapeHtml).join('<br>');
+                } else { er.style.display = 'none'; }
+            }
+        }
+
+        // ================= Downloads =================
+        function localDateStr(d) {
+            const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+            return y + '-' + m + '-' + day;
+        }
+
+        let activeExportDataUrl = '';
+
+        function closeDownloadModal() {
+            const modal = document.getElementById('downloadModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function openImageNewTab() {
+            if (!activeExportDataUrl) return;
+            const w = window.open('');
+            if (w) {
+                w.document.write('<title>VISUAL ARC Barcode Export</title><body style="background:#0d1117; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;"><img src="' + activeExportDataUrl + '" style="background:#fff; padding:20px; border-radius:10px; max-width:90%; height:auto;"></body>');
+            } else {
+                alert('Pop-up blocked. Right-click or tap & hold the image in the modal to save.');
+            }
+        }
+
+        function openCanvasImage() {
+            const canvas = document.getElementById('barcode-canvas');
+            if (!currentRaw || !canvas || canvas.style.display === 'none') {
+                generateBarcode();
+            }
+            const c = document.getElementById('barcode-canvas');
+            if (!c) {
+                alert('Please enter license details and click "Generate Barcode" first.');
+                return;
+            }
+
+            let dataUrl = '';
+            try {
+                dataUrl = c.toDataURL('image/png');
+            } catch (e) {}
+
+            if (!dataUrl) {
+                alert('Could not render canvas image.');
+                return;
+            }
+
+            activeExportDataUrl = dataUrl;
+            const filename = (getVal('lastName') || 'VISUAL ARC') + '_' + getVal('state', 'WA') + '_barcode.png';
+
+            const modal = document.getElementById('downloadModal');
+            const img = document.getElementById('dlModalImg');
+            const actionBtn = document.getElementById('dlModalActionBtn');
+            const title = document.getElementById('dlModalTitle');
+            const icon = document.getElementById('dlModalIcon');
+
+            if (modal && img && actionBtn) {
+                img.src = dataUrl;
+                actionBtn.href = dataUrl;
+                actionBtn.download = filename;
+                if (title) title.textContent = '🖼️ Save Barcode Image';
+                if (icon) icon.textContent = '🖼️';
+                modal.style.display = 'flex';
+                modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function downloadPNG() {
+            if (!currentRaw) {
+                generateBarcode();
+            }
+            const canvas = document.getElementById('barcode-canvas');
+            if (!canvas || canvas.style.display === 'none') {
+                alert('Please enter license details and click "Generate Barcode" first.');
+                return;
+            }
+
+            let dataUrl = '';
+            try {
+                const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+                if (bwipEngine) {
+                    const scale = parseInt(getVal('exportScale') || '6', 10);
+                    const hi = document.createElement('canvas');
+                    bwipEngine.toCanvas(hi, Object.assign({}, getBwipOpts(scale), { text: currentRaw }));
+                    dataUrl = hi.toDataURL('image/png');
+                }
+            } catch (e) {
+                console.warn('Offscreen canvas failed, using main canvas:', e);
+            }
+
+            if (!dataUrl && canvas) {
+                try { dataUrl = canvas.toDataURL('image/png'); } catch (err) {}
+            }
+
+            if (!dataUrl) {
+                alert('Barcode image not ready. Please click "Generate Barcode" again.');
+                return;
+            }
+
+            activeExportDataUrl = dataUrl;
+            const filename = (getVal('lastName') || 'VISUAL ARC') + '_' + getVal('state', 'WA') + '.png';
+
+            try {
+                const l = document.createElement('a');
+                l.download = filename;
+                l.href = dataUrl;
+                l.target = '_blank';
+                document.body.appendChild(l);
+                l.click();
+                document.body.removeChild(l);
+            } catch (e) {}
+
+            const modal = document.getElementById('downloadModal');
+            const img = document.getElementById('dlModalImg');
+            const actionBtn = document.getElementById('dlModalActionBtn');
+            const title = document.getElementById('dlModalTitle');
+            const icon = document.getElementById('dlModalIcon');
+
+            if (modal && img && actionBtn) {
+                img.src = dataUrl;
+                actionBtn.href = dataUrl;
+                actionBtn.download = filename;
+                if (title) title.textContent = '📥 Download PNG Barcode Image';
+                if (icon) icon.textContent = '🖼️';
+                modal.style.display = 'flex';
+                modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function downloadSVG() {
+            if (!currentRaw) {
+                generateBarcode();
+            }
+            const canvas = document.getElementById('barcode-canvas');
+            if (!canvas || canvas.style.display === 'none') {
+                alert('Please enter license details and click "Generate Barcode" first.');
+                return;
+            }
+
+            const bwipEngine = typeof bwipjs !== 'undefined' ? bwipjs : (window.bwipjs || null);
+            let svg = '';
+            if (bwipEngine) {
+                try {
+                    svg = bwipEngine.toSVG(Object.assign({}, getBwipOpts(), { text: currentRaw }));
+                    if (typeof svg !== 'string') svg = svg.svg || String(svg);
+                } catch (e) {}
+            }
+
+            if (!svg) {
+                svg = '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="' + (canvas ? canvas.width : 300) + '" height="' + (canvas ? canvas.height : 100) + '"><image href="' + (canvas ? canvas.toDataURL() : '') + '"/></svg>';
+            }
+
+            const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            activeExportDataUrl = svgDataUrl;
+            const filename = (getVal('lastName') || 'VISUAL ARC') + '_' + getVal('state', 'WA') + '.svg';
+
+            try {
+                const b = new Blob([svg], { type: 'image/svg+xml' });
+                const blobUrl = URL.createObjectURL(b);
+                const l = document.createElement('a');
+                l.download = filename;
+                l.href = blobUrl;
+                l.target = '_blank';
+                document.body.appendChild(l);
+                l.click();
+                document.body.removeChild(l);
+            } catch (e) {}
+
+            const modal = document.getElementById('downloadModal');
+            const img = document.getElementById('dlModalImg');
+            const actionBtn = document.getElementById('dlModalActionBtn');
+            const title = document.getElementById('dlModalTitle');
+            const icon = document.getElementById('dlModalIcon');
+
+            if (modal && img && actionBtn) {
+                img.src = svgDataUrl;
+                actionBtn.href = svgDataUrl;
+                actionBtn.download = filename;
+                if (title) title.textContent = '📥 Download SVG Vector Barcode';
+                if (icon) icon.textContent = '📐';
+                modal.style.display = 'flex';
+                modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // ================= Tabs =================
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function setTheme(name) {
+            document.body.className = (name === 'default' || !name) ? '' : 'theme-' + name;
+            safeSetStorage('visualarc_theme', name);
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('thm-' + name);
+            if (btn) btn.classList.add('active');
+        }
+
+        // ================= Init =================
+        window.onload = function () {
+            setTheme(safeGetStorage('visualarc_theme') || 'default');
+            fetchAppConfig();
+
+            const restored = restoreFormState();
+            if (!restored) {
+                const t = new Date();
+                setVal('issueDate', localDateStr(t));
+                const exp = new Date(t); exp.setFullYear(exp.getFullYear() + 5);
+                setVal('expirationDate', localDateStr(exp));
+                setVal('dob', '1995-05-15');
+                regenDD();
+                loadStatePreset('WA');
+            } else {
+                updateDLFormat();
+                updateHeightHint();
+                generateBarcode();
+            }
+
+            checkReturnPayment();
+            checkPaymentState();
+
+            document.querySelectorAll('#lastName, #firstName, #middleName, #suffix, #dob, #sex, #height, #weight, #eyeColor, #hairColor, #issueDate, #expirationDate, #address1, #address2, #city, #state, #zip, #vehicleClass, #restrictions, #endorsements, #dd, #jurisdictionVersion, #iin, #docType, #aamvaVersion, #licenseNumber, #barcodeColumns, #barcodeRowHeight, #barcodeBg').forEach(el => {
+                el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+                    if (el.id === 'state') updateDLFormat();
+                    if (el.id === 'height') updateHeightHint();
+                    saveFormState();
+                    scheduleRegen();
+                });
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.readOnly) generateBarcode();
+            });
+        };
+    </script>
+</body>
+</html>

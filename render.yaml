@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: visual-arc-free
+    env: static
+    buildCommand: ""
+    staticPublishPath: ./
